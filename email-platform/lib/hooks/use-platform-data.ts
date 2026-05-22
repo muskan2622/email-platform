@@ -77,7 +77,9 @@ export function usePlatformData() {
   }, [])
 
   useEffect(() => {
-    refresh()
+    queueMicrotask(() => {
+      void refresh()
+    })
   }, [refresh])
 
   return { data, loading, error, refresh }

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { useEffect, useState } from "react"
+import { useMemo, useState } from "react"
 import { ChevronDown, Zap } from "lucide-react"
 import { TopNavbar } from "@/components/layout/top-navbar"
 import { GlassCard } from "@/components/motion/glass-card"
@@ -22,12 +22,8 @@ function eventStatus(ev: EventRecord) {
 export function EventsCenter() {
   const { data, loading, error } = usePlatformDataContext()
   const [expanded, setExpanded] = useState<string | null>(null)
-  const events = data?.events ?? []
-  const selected = events.find((e) => e.id === expanded) ?? events[0]
-
-  useEffect(() => {
-    if (events.length && !expanded) setExpanded(events[0].id)
-  }, [events, expanded])
+  const events = useMemo(() => data?.events ?? [], [data?.events])
+  const selected = expanded ? events.find((e) => e.id === expanded) : events[0]
 
   return (
     <>

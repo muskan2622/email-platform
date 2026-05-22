@@ -1,6 +1,7 @@
 "use client"
 
 import { motion, type HTMLMotionProps } from "framer-motion"
+import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
 export function GlassCard({
@@ -8,7 +9,7 @@ export function GlassCard({
   children,
   glow = false,
   ...props
-}: HTMLMotionProps<"div"> & { glow?: boolean }) {
+}: Omit<HTMLMotionProps<"div">, "children"> & { children: ReactNode; glow?: boolean }) {
   return (
     <motion.div
       whileHover={{ y: -2, transition: { duration: 0.2 } }}

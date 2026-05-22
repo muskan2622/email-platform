@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TemplateStatus {
+  draft
+  active
+  archived
+}
+
+enum TemplateKind {
+  transactional
+  marketing
+}
+
+enum TemplateVersionState {
+  draft
+  published
+  archived
+}
+
+enum EmailProvider {
+  resend
+  sendgrid
+  ses
+}
+
+enum DeliveryStatus {
+  queued
+  sent
+  delivered
+  opened
+  clicked
+  bounced
+  complained
+  unsubscribed
+  failed
+}
+
+model Template {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug               String             @unique
+  name               String
+  description        String?
+  subject            String             @default("")
+  bodyHtml           String             @default("") @map("body_html")
+  bodyText           String?            @map("body_text")
+  status             TemplateStatus     @default(draft)
+  kind               TemplateKind       @default(transactional)
+  folder             String             @default("Lifecycle")
+  tags               String[]           @default([])
+  placeholders       String[]           @default([])
+  favorite           Boolean            @default(false)
+  publishedVersionId String?            @map("published_version_id") @db.Uuid
+  createdBy          String?            @map("created_by") @db.Uuid
+  updatedBy          String?            @map("updated_by") @db.Uuid
+  archivedAt         DateTime?          @map("archived_at") @db.Timestamptz
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  versions           TemplateVersion[]
+  comments           TemplateComment[]
+  approvals          TemplateApproval[]
+  auditLogs          TemplateAuditLog[]
+  deliveryLogs       EmailDeliveryLog[]
+  webhookEvents      EmailWebhookEvent[]
+
+  @@index([status])
+  @@index([folder])
+  @@index([kind, status, updatedAt])
+  @@map("templates")
+}
+
+model TemplateVersion {
+  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId     String               @map("template_id") @db.Uuid
+  versionNumber  Int                  @map("version_number")
+  state          TemplateVersionState @default(draft)
+  subject        String
+  bodyHtml       String               @map("body_html")
+  bodyText       String?              @map("body_text")
+  editorDocument Json                 @default("{}") @map("editor_document")
+  placeholders   String[]             @default([])
+  spamScore      Decimal?             @map("spam_score") @db.Decimal(5, 2)
+  createdBy      String?              @map("created_by") @db.Uuid
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  template       Template             @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  comments       TemplateComment[]
+  approvals      TemplateApproval[]
+  auditLogs      TemplateAuditLog[]
+  deliveryLogs   EmailDeliveryLog[]
+
+  @@unique([templateId, versionNumber])
+  @@index([templateId, createdAt])
+  @@map("template_versions")
+}
+
+model TemplatePartial {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  slug           String   @unique
+  bodyHtml       String   @map("body_html")
+  editorDocument Json     @default("{}") @map("editor_document")
+  createdBy      String?  @map("created_by") @db.Uuid
+  updatedBy      String?  @map("updated_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("template_partials")
+}
+
+model TemplateComment {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId String           @map("template_id") @db.Uuid
+  versionId  String?          @map("version_id") @db.Uuid
+  body       String
+  anchor     Json             @default("{}")
+  status     String           @default("open")
+  createdBy  String?          @map("created_by") @db.Uuid
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  resolvedBy String?          @map("resolved_by") @db.Uuid
+  resolvedAt DateTime?        @map("resolved_at") @db.Timestamptz
+  template   Template         @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  version    TemplateVersion? @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([templateId, status, createdAt])
+  @@map("template_comments")
+}
+
+model TemplateApproval {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId  String          @map("template_id") @db.Uuid
+  versionId   String          @map("version_id") @db.Uuid
+  status      String          @default("pending")
+  requestedBy String?         @map("requested_by") @db.Uuid
+  reviewerId  String?         @map("reviewer_id") @db.Uuid
+  decidedAt   DateTime?       @map("decided_at") @db.Timestamptz
+  note        String?
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  template    Template        @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  version     TemplateVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([reviewerId, status, createdAt])
+  @@map("template_approvals")
+}
+
+model TemplateAuditLog {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId    String?          @map("actor_id") @db.Uuid
+  templateId String?          @map("template_id") @db.Uuid
+  versionId  String?          @map("version_id") @db.Uuid
+  action     String
+  before     Json?
+  after      Json?
+  requestId  String?          @map("request_id")
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  template   Template?        @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  version    TemplateVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+
+  @@index([templateId, createdAt])
+  @@map("template_audit_logs")
+}
+
+model EmailDeliveryLog {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId        String?          @map("template_id") @db.Uuid
+  templateVersionId String?          @map("template_version_id") @db.Uuid
+  provider          EmailProvider
+  providerMessageId String?          @map("provider_message_id")
+  recipient         String
+  subject           String
+  status            DeliveryStatus
+  idempotencyKey    String           @unique @map("idempotency_key")
+  attempt           Int              @default(1)
+  error             String?
+  metadata          Json             @default("{}")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  template          Template?        @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  version           TemplateVersion? @relation(fields: [templateVersionId], references: [id], onDelete: SetNull)
+
+  @@index([templateId, createdAt])
+  @@index([provider, status, createdAt])
+  @@index([recipient, createdAt])
+  @@map("email_delivery_logs")
+}
+
+model EmailWebhookEvent {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider          EmailProvider
+  providerMessageId String        @map("provider_message_id")
+  eventType         String        @map("event_type")
+  recipient         String?
+  templateId        String?       @map("template_id") @db.Uuid
+  payload           Json          @default("{}")
+  occurredAt        DateTime      @map("occurred_at") @db.Timestamptz
+  processedAt       DateTime?     @map("processed_at") @db.Timestamptz
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  template          Template?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerMessageId, eventType, occurredAt])
+  @@map("email_webhook_events")
+}

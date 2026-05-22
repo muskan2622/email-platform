@@ -33,12 +33,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-    const initial: Theme = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light"
-    setThemeState(initial)
-    applyTheme(initial)
-    setMounted(true)
+    queueMicrotask(() => {
+      const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+      const initial: Theme = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light"
+      setThemeState(initial)
+      applyTheme(initial)
+      setMounted(true)
+    })
   }, [])
 
   const setTheme = useCallback((next: Theme) => {

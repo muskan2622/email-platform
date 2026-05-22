@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { jsonError, jsonOk } from "@/lib/api/response"
 import { buildRenderContext, renderEmail } from "@/lib/email/render"
-import { sendEmail } from "@/lib/email/send"
+import { sendEmail, type EmailProviderId } from "@/lib/email/send"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Template } from "@/lib/types/database"
 
@@ -19,6 +19,10 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const to = typeof body.to === "string" ? body.to.trim() : ""
   if (!to) return jsonError("to (email address) is required")
+  const provider =
+    body.provider === "sendgrid" || body.provider === "ses" || body.provider === "resend"
+      ? (body.provider as EmailProviderId)
+      : "resend"
 
   const supabase = createAdminClient()
   const { data: template, error } = await supabase
@@ -49,8 +53,10 @@ export async function POST(request: NextRequest, { params }: Params) {
       subject: `[TEST] ${rendered.subject}`,
       html: rendered.html,
       text: rendered.text,
+      provider,
+      idempotencyKey: `test:${id}:${to}`,
     })
-    return jsonOk({ message_id: sent?.id, rendered })
+    return jsonOk({ message_id: sent.id, provider: sent.provider, status: sent.status, rendered })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Send failed"
     return jsonError(message, 502)
