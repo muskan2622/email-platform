@@ -8,6 +8,7 @@ import {
   MiniMap,
   Position,
   ReactFlow,
+  type ReactFlowInstance,
   type Connection,
   type Edge,
   type Node,
@@ -29,6 +30,7 @@ import {
   Flag,
   Globe2,
   Hourglass,
+  Loader2,
   Mail,
   Maximize2,
   MousePointer2,
@@ -45,6 +47,7 @@ import {
   Users,
   Webhook,
   Workflow,
+  X,
   Zap,
 } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -57,6 +60,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingState } from "@/components/ui/loading-state"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { apiPost } from "@/lib/api/client"
 
 type WorkflowNodeKind =
   | "trigger"
@@ -78,6 +82,8 @@ type WorkflowNodeData = {
   status: "live" | "waiting" | "guarded" | "test" | "done"
   details: string[]
 }
+
+type WorkflowGraphNode = Node<WorkflowNodeData, "workflow">
 
 const nodeCatalog: Array<{ kind: WorkflowNodeKind; label: string; icon: typeof Zap }> = [
   { kind: "trigger", label: "Trigger", icon: Zap },
@@ -103,18 +109,40 @@ const eventExamples = [
   "message.sent",
 ]
 
-const samplePayload = `{
-  "event": "user.plan_upgraded",
-  "message_id": "evt_01HY",
-  "timestamp": "2026-05-23T01:45:00.000Z",
-  "source": "billing",
-  "user": {
-    "external_id": "user_123",
-    "email": "alex@example.com",
-    "metadata": { "plan_name": "pro", "timezone": "Asia/Calcutta" }
-  },
-  "payload": { "plan_name": "pro", "mrr": 99 }
-}`
+function buildSamplePayload(type: string) {
+  return {
+    type,
+    message_id: `evt_preview_${type.replace(/[^a-z0-9]/gi, "_")}`,
+    source: "workflow-simulator",
+    timestamp: new Date().toISOString(),
+    identifiers: { workspace_id: "ws_123" },
+    user: {
+      external_id: "user_123",
+      email: "alex@example.com",
+      metadata: { plan_name: "pro", timezone: "Asia/Calcutta" },
+      unsubscribed_product: false,
+    },
+    payload: { plan_name: "pro", mrr: 99 },
+  }
+}
+
+type ReplayResult = {
+  replay_id: string
+  accepted_at: string
+  idempotency_key: string
+  evaluations: Array<{
+    trigger_id: string
+    trigger_name: string
+    event_type: string
+    matched: boolean
+    reason: string
+    template: { id: string; name: string; status: string } | null
+  }>
+}
+
+function formatPayload(payload: ReturnType<typeof buildSamplePayload>) {
+  return JSON.stringify(payload, null, 2)
+}
 
 function conditionSummary(conditions: ConditionGroup): string {
   const rules = conditions?.rules ?? []
@@ -181,7 +209,7 @@ function WorkflowNodeIcon({ kind }: { kind: WorkflowNodeKind }) {
   }
 }
 
-function WorkflowNode({ data, selected }: NodeProps<Node<WorkflowNodeData>>) {
+function WorkflowNode({ data, selected }: NodeProps<WorkflowGraphNode>) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
@@ -226,7 +254,7 @@ function buildWorkflow(trigger: {
   templates: { name: string } | null
 }) {
   const condition = conditionSummary(trigger.conditions)
-  const nodes: Array<Node<WorkflowNodeData>> = [
+  const nodes: WorkflowGraphNode[] = [
     {
       id: "trigger",
       type: "workflow",
@@ -368,6 +396,9 @@ function buildWorkflow(trigger: {
 
 function WorkflowCanvas({
   trigger,
+  onRunTest,
+  runningTest,
+  runResult,
 }: {
   trigger: {
     name: string
@@ -376,12 +407,26 @@ function WorkflowCanvas({
     conditions: ConditionGroup
     templates: { name: string } | null
   }
+  onRunTest: () => Promise<void>
+  runningTest: boolean
+  runResult: ReplayResult | null
 }) {
   const initial = useMemo(() => buildWorkflow(trigger), [trigger])
   const [nodes, , onNodesChange] = useNodesState(initial.nodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges)
   const [selectedNodeId, setSelectedNodeId] = useState("trigger")
+  const [flowInstance, setFlowInstance] = useState<ReactFlowInstance<WorkflowGraphNode, Edge> | null>(null)
+  const [fitOpen, setFitOpen] = useState(false)
   const selectedNode = nodes.find((node) => node.id === selectedNodeId) ?? nodes[0]
+
+  const fitCanvas = () => {
+    void flowInstance?.fitView({ padding: 0.18, duration: 450 })
+  }
+
+  const openFitModal = () => {
+    fitCanvas()
+    setFitOpen(true)
+  }
 
   const onConnect = (connection: Connection) => {
     setEdges((current) =>
@@ -407,12 +452,15 @@ function WorkflowCanvas({
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm"><MousePointer2 />Pan</Button>
-            <Button variant="outline" size="sm"><Maximize2 />Fit</Button>
-            <Button size="sm"><Play />Run test</Button>
+            <Button variant="outline" size="sm" onClick={openFitModal}><Maximize2 />Fit</Button>
+            <Button size="sm" onClick={() => void onRunTest()} disabled={runningTest}>
+              {runningTest ? <Loader2 className="animate-spin" /> : <Play />}
+              Run test
+            </Button>
           </div>
         </div>
         <div className="h-[650px] bg-[radial-gradient(circle_at_20%_10%,rgba(139,92,246,0.15),transparent_32%),radial-gradient(circle_at_80%_80%,rgba(34,211,238,0.12),transparent_30%)]">
-          <ReactFlow
+          <ReactFlow<WorkflowGraphNode, Edge>
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
@@ -420,6 +468,7 @@ function WorkflowCanvas({
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onInit={setFlowInstance}
             fitView
             minZoom={0.35}
             maxZoom={1.35}
@@ -437,6 +486,112 @@ function WorkflowCanvas({
           </ReactFlow>
         </div>
       </GlassCard>
+
+      {fitOpen ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-xl">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="glass-panel relative max-h-[88vh] w-full max-w-6xl overflow-hidden rounded-2xl"
+          >
+            <div className="relative z-[1] flex flex-wrap items-center justify-between gap-3 border-b border-flow-glass-faint px-6 py-4">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-flow-faint">Workflow Command Center</p>
+                <h3 className="text-2xl font-semibold text-flow">{trigger.name}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={fitCanvas}><Maximize2 />Fit canvas</Button>
+                <Button onClick={() => void onRunTest()} disabled={runningTest}>
+                  {runningTest ? <Loader2 className="animate-spin" /> : <Play />}
+                  Run test
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setFitOpen(false)} aria-label="Close workflow popup">
+                  <X />
+                </Button>
+              </div>
+            </div>
+            <div className="relative z-[1] grid gap-4 p-6 lg:grid-cols-[1.45fr_0.55fr]">
+              <div className="overflow-hidden rounded-xl border border-flow-glass-faint bg-black/30">
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="px-4 pt-4 text-sm font-semibold text-flow">Automation Canvas</h4>
+                  <span className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-100">
+                    {nodes.length} nodes · {edges.length} paths
+                  </span>
+                </div>
+                <div className="h-[560px] bg-[radial-gradient(circle_at_20%_10%,rgba(139,92,246,0.18),transparent_32%),radial-gradient(circle_at_80%_80%,rgba(34,211,238,0.14),transparent_30%)]">
+                  <ReactFlow<WorkflowGraphNode, Edge>
+                    nodes={nodes}
+                    edges={edges}
+                    nodeTypes={nodeTypes}
+                    onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+                    fitView
+                    minZoom={0.3}
+                    maxZoom={1.5}
+                    defaultEdgeOptions={{ animated: true }}
+                    nodesDraggable={false}
+                    nodesConnectable={false}
+                    elementsSelectable
+                    proOptions={{ hideAttribution: true }}
+                  >
+                    <Background color="rgba(255,255,255,0.08)" gap={24} />
+                    <MiniMap
+                      pannable
+                      zoomable
+                      nodeColor={(node) => (node.id === selectedNodeId ? "#22d3ee" : "#6d28d9")}
+                      className="!border !border-white/10 !bg-black/45"
+                    />
+                    <Controls className="!border !border-white/10 !bg-black/45 !text-white" />
+                  </ReactFlow>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-xl border border-flow-glass-faint bg-black/30 p-4">
+                  <h4 className="mb-3 text-sm font-semibold text-flow">Test Result</h4>
+                  {runningTest ? (
+                    <div className="flex items-center gap-2 text-sm text-flow-muted">
+                      <Loader2 className="h-4 w-4 animate-spin text-cyan-300" />
+                      Running event replay through the rule evaluator...
+                    </div>
+                  ) : runResult ? (
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-emerald-300/25 bg-emerald-300/10 p-3">
+                        <p className="text-xs text-flow-faint">Replay</p>
+                        <p className="font-mono text-sm text-emerald-100">{runResult.replay_id}</p>
+                      </div>
+                      {runResult.evaluations.map((evaluation) => (
+                        <div key={evaluation.trigger_id} className="rounded-lg border border-flow-glass-faint bg-flow-glass-subtle p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm text-flow">{evaluation.trigger_name}</p>
+                            <span className={cn("rounded-full px-2 py-0.5 text-[11px]", evaluation.matched ? "bg-emerald-400/15 text-emerald-200" : "bg-amber-400/15 text-amber-200")}>
+                              {evaluation.matched ? "matched" : "skipped"}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-flow-faint">{evaluation.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-flow-muted">Run a test to validate event ingestion, conditions, caps, and delivery queueing.</p>
+                  )}
+                </div>
+                <div className="rounded-xl border border-flow-glass-faint bg-black/30 p-4">
+                  <h4 className="mb-3 text-sm font-semibold text-flow">Selected Node</h4>
+                  <p className="text-sm font-medium text-flow">{selectedNode.data.label}</p>
+                  <p className="mt-1 text-xs text-flow-muted">{selectedNode.data.subtitle}</p>
+                  <div className="mt-3 space-y-2">
+                    {selectedNode.data.details.map((detail) => (
+                      <div key={detail} className="flex gap-2 text-xs text-flow-muted">
+                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
+                        {detail}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      ) : null}
 
       <aside className="space-y-4">
         <GlassCard className="p-4">
@@ -506,8 +661,28 @@ export function WorkflowBuilder() {
   const events = data?.events ?? []
   const active = triggers.find((trigger) => trigger.enabled) ?? triggers[0]
   const [selectedTriggerId, setSelectedTriggerId] = useState<string | null>(null)
+  const [runningTest, setRunningTest] = useState(false)
+  const [runResult, setRunResult] = useState<ReplayResult | null>(null)
+  const [runMessage, setRunMessage] = useState<string | null>(null)
   const selected = triggers.find((trigger) => trigger.id === selectedTriggerId) ?? active
   const activeConditions = selected ? parseConditionGroup(selected.conditions) : { operator: "and" as const, rules: [] }
+  const previewPayload = selected ? buildSamplePayload(selected.event_type) : buildSamplePayload("user.plan_upgraded")
+
+  const runWorkflowTest = async () => {
+    if (!selected) return
+    setRunningTest(true)
+    setRunMessage(null)
+    try {
+      const result = await apiPost<ReplayResult>("/api/workflows/replay", buildSamplePayload(selected.event_type))
+      setRunResult(result)
+      const matched = result.evaluations.filter((evaluation) => evaluation.matched).length
+      setRunMessage(`Replay accepted. ${matched}/${result.evaluations.length} trigger${result.evaluations.length === 1 ? "" : "s"} matched.`)
+    } catch (err) {
+      setRunMessage(err instanceof Error ? err.message : "Replay failed")
+    } finally {
+      setRunningTest(false)
+    }
+  }
 
   const metrics = [
     { label: "Active users", value: "1,284", icon: Users, tone: "text-cyan-300" },
@@ -528,6 +703,20 @@ export function WorkflowBuilder() {
         <EmptyState message="No triggers configured" hint="Run the seed migration or create a trigger via POST /api/triggers." />
       ) : (
         <div className="space-y-6">
+          {runMessage ? (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={cn(
+                "fixed right-5 top-24 z-40 rounded-lg border px-4 py-3 text-sm shadow-2xl backdrop-blur",
+                runMessage.includes("failed") || runMessage.includes("Invalid")
+                  ? "border-rose-400/30 bg-rose-500/10 text-rose-100"
+                  : "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
+              )}
+            >
+              {runMessage}
+            </motion.div>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             {metrics.map((metric) => (
               <GlassCard key={metric.label} className="p-4">
@@ -574,9 +763,18 @@ export function WorkflowBuilder() {
                   <h2 className="text-sm font-semibold text-flow">Event Replay Simulator</h2>
                 </div>
                 <pre className="max-h-[240px] overflow-auto rounded-lg border border-flow-glass-faint bg-black/35 p-3 text-[11px] leading-relaxed text-cyan-100/80">
-                  {samplePayload}
+                  {formatPayload(previewPayload)}
                 </pre>
-                <Button className="mt-3 w-full"><Play />Replay payload</Button>
+                <Button className="mt-3 w-full" onClick={() => void runWorkflowTest()} disabled={runningTest}>
+                  {runningTest ? <Loader2 className="animate-spin" /> : <Play />}
+                  Replay payload
+                </Button>
+                {runResult ? (
+                  <div className="mt-3 rounded-lg border border-flow-glass-faint bg-flow-glass-subtle p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-flow-faint">Last replay</p>
+                    <p className="mt-1 truncate font-mono text-xs text-cyan-200">{runResult.idempotency_key}</p>
+                  </div>
+                ) : null}
               </GlassCard>
 
               <GlassCard className="p-4">
@@ -614,7 +812,13 @@ export function WorkflowBuilder() {
                 </div>
               </GlassCard>
 
-              <WorkflowCanvas key={selected.id} trigger={{ ...selected, conditions: activeConditions }} />
+              <WorkflowCanvas
+                key={selected.id}
+                trigger={{ ...selected, conditions: activeConditions }}
+                onRunTest={runWorkflowTest}
+                runningTest={runningTest}
+                runResult={runResult}
+              />
 
               <div className="grid gap-4 lg:grid-cols-3">
                 {[
