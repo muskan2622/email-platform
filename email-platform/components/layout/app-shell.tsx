@@ -5,6 +5,7 @@ import { FloatingDock } from "@/components/layout/floating-dock"
 import { FloatingSidebar } from "@/components/layout/floating-sidebar"
 import { SpotlightCursor } from "@/components/motion/spotlight-cursor"
 import { AiAssistant } from "@/components/ai/ai-assistant"
+import { AutomationWizardHost } from "@/components/automation-builder/automation-wizard-host"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
       <FloatingDock />
       <AiAssistant />
+      <AutomationWizardHost />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { Bell, Command, Search } from "lucide-react"
-import { MagneticButton } from "@/components/motion/magnetic-button"
 import { GlowPulse } from "@/components/motion/glow-pulse"
+import { NewAutomationButton } from "@/components/layout/new-automation-button"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 
 export function TopNavbar({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -39,8 +39,9 @@ export function TopNavbar({ title, subtitle }: { title: string; subtitle?: strin
         </button>
         <ThemeToggle />
         <div className="hidden md:block">
-          <MagneticButton className="!py-2 !text-xs">New automation</MagneticButton>
+          <NewAutomationButton className="!py-2 !text-xs" />
         </div>
+
       </div>
     </header>
   )
