@@ -1,0 +1,13 @@
+# Minimal Supabase CLI config. Run migrations with:
+#   supabase link --project-ref <ref>
+#   supabase db push
+
+project_id = "email-platform"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
