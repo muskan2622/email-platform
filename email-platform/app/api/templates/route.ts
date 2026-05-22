@@ -14,9 +14,15 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim()
   const status = request.nextUrl.searchParams.get("status")
 
+  const full = request.nextUrl.searchParams.get("full") === "1"
+
   let query = supabase
     .from("templates")
-    .select("*")
+    .select(
+      full
+        ? "*"
+        : "id,slug,name,subject,body_html,body_text,status,created_at,updated_at"
+    )
     .order("updated_at", { ascending: false })
 
   if (status) query = query.eq("status", status)

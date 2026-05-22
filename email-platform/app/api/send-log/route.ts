@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("send_log")
     .select(
-      "*, triggers(name), templates(slug, name), end_users(email, external_id)"
+      "id,status,rendered_subject,skip_reason,error,created_at,trigger_id,template_id,end_user_id,triggers(name),templates(slug,name),end_users(email,external_id)"
     )
     .order("created_at", { ascending: false })
     .limit(limit)

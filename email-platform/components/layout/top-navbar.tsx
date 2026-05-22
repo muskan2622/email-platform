@@ -12,31 +12,6 @@ export function TopNavbar({ title, subtitle }: { title: string; subtitle?: strin
       </div>
 
       <div className="relative z-[1] flex items-center gap-2 md:gap-3">
-        <button
-          type="button"
-          className="hidden items-center gap-2 rounded-xl border border-flow-glass bg-flow-glass-subtle px-3 py-2 text-sm text-flow-muted transition-colors hover:border-flow-glass-hover hover:text-flow-secondary sm:flex"
-        >
-          <Search className="h-4 w-4" />
-          <span>Search</span>
-          <kbd className="rounded-md border border-flow-glass-faint bg-flow-glass-subtle px-1.5 py-0.5 font-mono text-[10px] text-flow-faint">
-            ⌘K
-          </kbd>
-        </button>
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-flow-glass bg-flow-glass-subtle text-flow-muted transition-colors hover:text-flow"
-        >
-          <Command className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-flow-glass bg-flow-glass-subtle text-flow-muted transition-colors hover:text-flow"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2">
-            <GlowPulse color="violet" />
-          </span>
-        </button>
         <ThemeToggle />
         <div className="hidden md:block">
           <NewAutomationButton className="!py-2 !text-xs" />
