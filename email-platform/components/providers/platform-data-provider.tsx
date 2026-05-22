@@ -11,15 +11,22 @@ type ContextValue = {
   loading: boolean
   error: string | null
   refresh: () => Promise<void>
+  lastRefreshed: number | null
 }
 
 const PlatformDataContext = createContext<ContextValue | null>(null)
 
-export function PlatformDataProvider({ children }: { children: ReactNode }) {
-  const { data, error, loading, refresh } = usePlatformData()
+export function PlatformDataProvider({
+  children,
+  pollMs = 0,
+}: {
+  children: ReactNode
+  pollMs?: number
+}) {
+  const { data, error, loading, refresh, lastRefreshed } = usePlatformData({ pollMs })
   const value = useMemo(
-    () => ({ data, error, loading, refresh }),
-    [data, error, loading, refresh]
+    () => ({ data, error, loading, refresh, lastRefreshed }),
+    [data, error, loading, refresh, lastRefreshed]
   )
   return (
     <PlatformDataContext.Provider value={value}>

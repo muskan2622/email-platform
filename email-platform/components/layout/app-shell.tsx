@@ -4,6 +4,7 @@ import { AmbientBackground } from "@/components/background/ambient-background"
 import { FloatingDock } from "@/components/layout/floating-dock"
 import { FloatingSidebar } from "@/components/layout/floating-sidebar"
 import { SpotlightCursor } from "@/components/motion/spotlight-cursor"
+import { AiAssistant } from "@/components/ai/ai-assistant"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto max-w-[1600px] px-4 py-4 md:px-8 md:py-6">{children}</div>
       </main>
       <FloatingDock />
+      <AiAssistant />
     </div>
   )
 }

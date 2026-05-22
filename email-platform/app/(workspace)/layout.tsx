@@ -7,7 +7,7 @@ export default function WorkspaceLayout({
   children: React.ReactNode
 }) {
   return (
-    <PlatformDataProvider>
+    <PlatformDataProvider pollMs={15000}>
       <AppShell>{children}</AppShell>
     </PlatformDataProvider>
   )

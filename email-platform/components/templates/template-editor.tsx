@@ -44,8 +44,9 @@ import {
 import { useEffect, useMemo, useState } from "react"
 import { TopNavbar } from "@/components/layout/top-navbar"
 import { GlassCard } from "@/components/motion/glass-card"
-import { AiAssistant } from "@/components/ai/ai-assistant"
+import { AiEmailContextBridge } from "@/components/ai/ai-assistant"
 import { usePlatformDataContext } from "@/components/providers/platform-data-provider"
+import { useAiAssistantStore } from "@/lib/stores/ai-assistant-store"
 import { apiPatch, apiPost } from "@/lib/api/client"
 import type { Template } from "@/lib/types/database"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -187,6 +188,22 @@ export function TemplateEditor() {
     setSubject(template.subject)
     setBody(editorBody(template))
   }
+
+  useEffect(() => {
+    const onApply = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text
+      if (!text || !selected?.id) return
+      setDraftTemplateId(selected.id)
+      const sel = useAiAssistantStore.getState().emailContext.selectedText
+      if (sel && activeBody.includes(sel)) {
+        setBody(activeBody.replace(sel, text))
+      } else {
+        setBody(text)
+      }
+    }
+    window.addEventListener("pulse-ai-apply", onApply)
+    return () => window.removeEventListener("pulse-ai-apply", onApply)
+  }, [selected?.id, activeBody])
 
   const filteredTemplates = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -504,7 +521,7 @@ export function TemplateEditor() {
                   </div>
                 </div>
               </GlassCard>
-              <AiAssistant compact subject={activeSubject} body={activeBody} />
+              <AiEmailContextBridge subject={activeSubject} body={activeBody} />
             </section>
 
             <aside className="space-y-4">

@@ -6,7 +6,6 @@ import { HeroSection } from "@/components/dashboard/hero-section"
 import { MetricCards } from "@/components/dashboard/metric-cards"
 import { AnimatedChart } from "@/components/dashboard/animated-chart"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { AiAssistant } from "@/components/ai/ai-assistant"
 import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container"
 
 export function DashboardView() {
@@ -34,9 +33,6 @@ export function DashboardView() {
             <ActivityFeed />
           </StaggerItem>
         </div>
-        <StaggerItem>
-          <AiAssistant />
-        </StaggerItem>
       </StaggerContainer>
     </>
   )

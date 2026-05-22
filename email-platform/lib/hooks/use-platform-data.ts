@@ -34,10 +34,13 @@ export interface PlatformStats {
   activeTriggers: number
 }
 
-export function usePlatformData() {
+export function usePlatformData(options?: { pollMs?: number; enabled?: boolean }) {
+  const pollMs = options?.pollMs ?? 0
+  const enabled = options?.enabled ?? true
   const [data, setData] = useState<PlatformStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastRefreshed, setLastRefreshed] = useState<number | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -69,6 +72,7 @@ export function usePlatformData() {
         eventsCount: events.length,
         activeTriggers: triggers.filter((t) => t.enabled).length,
       })
+      setLastRefreshed(Date.now())
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load data")
     } finally {
@@ -77,10 +81,17 @@ export function usePlatformData() {
   }, [])
 
   useEffect(() => {
+    if (!enabled) return
     queueMicrotask(() => {
       void refresh()
     })
-  }, [refresh])
+  }, [refresh, enabled])
 
-  return { data, loading, error, refresh }
+  useEffect(() => {
+    if (!enabled || pollMs <= 0) return
+    const id = setInterval(() => void refresh(), pollMs)
+    return () => clearInterval(id)
+  }, [refresh, pollMs, enabled])
+
+  return { data, loading, error, refresh, lastRefreshed }
 }

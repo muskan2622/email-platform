@@ -33,7 +33,6 @@ import {
   Loader2,
   Mail,
   Maximize2,
-  MousePointer2,
   PauseCircle,
   Play,
   RefreshCw,
@@ -50,7 +49,7 @@ import {
   X,
   Zap,
 } from "lucide-react"
-import { memo, useCallback, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { TopNavbar } from "@/components/layout/top-navbar"
 import { GlassCard } from "@/components/motion/glass-card"
 import { usePlatformDataContext } from "@/components/providers/platform-data-provider"
@@ -244,6 +243,11 @@ const WorkflowNode = memo(function WorkflowNode({ data, selected }: NodeProps<Wo
 
 const nodeTypes = { workflow: WorkflowNode }
 const graphEdgeOptions = { animated: true }
+const flowCanvasClass = "workflow-canvas h-full w-full"
+const flowControlsClass =
+  "!border !border-white/10 !bg-black/45 !shadow-none [&_.react-flow__controls-button]:!border-white/10 [&_.react-flow__controls-button]:!bg-black/60 [&_.react-flow__controls-button]:!text-white [&_.react-flow__controls-button:hover]:!bg-black/80"
+const canvasToolbarButtonClass =
+  "border-white/10 bg-black/30 text-flow hover:bg-black/45 dark:border-white/10 dark:bg-black/30 dark:hover:bg-black/45"
 
 function buildWorkflow(trigger: {
   name: string
@@ -427,6 +431,14 @@ function WorkflowCanvas({
     setFitOpen(true)
   }, [fitCanvas])
 
+  useEffect(() => {
+    if (!flowInstance) return
+    const frame = requestAnimationFrame(() => {
+      flowInstance.fitView({ padding: 0.18, duration: 0 })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [flowInstance, nodes.length, fitOpen])
+
   const onConnect = useCallback((connection: Connection) => {
     setEdges((current) =>
       addEdge(
@@ -447,23 +459,40 @@ function WorkflowCanvas({
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
-      <GlassCard className="min-h-[720px] overflow-hidden">
+      <GlassCard className="glass-panel-canvas min-h-[720px]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-flow-glass-faint px-4 py-3">
           <div>
             <p className="text-xs uppercase tracking-widest text-flow-faint">Automation Canvas</p>
             <h2 className="text-lg font-semibold text-flow">{trigger.name}</h2>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm"><MousePointer2 />Pan</Button>
-            <Button variant="outline" size="sm" onClick={openFitModal}><Maximize2 />Fit</Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className={canvasToolbarButtonClass}
+              onClick={fitCanvas}
+            >
+              <Maximize2 />
+              Fit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className={canvasToolbarButtonClass}
+              onClick={openFitModal}
+            >
+              <Maximize2 />
+              Expand
+            </Button>
             <Button size="sm" onClick={() => void onRunTest()} disabled={runningTest}>
               {runningTest ? <Loader2 className="animate-spin" /> : <Play />}
               Run test
             </Button>
           </div>
         </div>
-        <div className="h-[650px] bg-[radial-gradient(circle_at_20%_10%,rgba(139,92,246,0.15),transparent_32%),radial-gradient(circle_at_80%_80%,rgba(34,211,238,0.12),transparent_30%)]">
+        <div className="relative isolate h-[650px] overflow-hidden rounded-b-2xl bg-[radial-gradient(circle_at_20%_10%,rgba(139,92,246,0.15),transparent_32%),radial-gradient(circle_at_80%_80%,rgba(34,211,238,0.12),transparent_30%)]">
           <ReactFlow<WorkflowGraphNode, Edge>
+            className={flowCanvasClass}
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
@@ -472,7 +501,6 @@ function WorkflowCanvas({
             onConnect={onConnect}
             onNodeClick={selectNode}
             onInit={setFlowInstance}
-            fitView
             minZoom={0.35}
             maxZoom={1.35}
             defaultEdgeOptions={graphEdgeOptions}
@@ -485,7 +513,7 @@ function WorkflowCanvas({
               nodeColor={(node) => (node.id === selectedNodeId ? "#22d3ee" : "#6d28d9")}
               className="!border !border-white/10 !bg-black/40"
             />
-            <Controls className="!border !border-white/10 !bg-black/45 !text-white" />
+            <Controls className={flowControlsClass} />
           </ReactFlow>
         </div>
       </GlassCard>
@@ -503,7 +531,10 @@ function WorkflowCanvas({
                 <h3 className="text-2xl font-semibold text-flow">{trigger.name}</h3>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={fitCanvas}><Maximize2 />Fit canvas</Button>
+                <Button variant="outline" className={canvasToolbarButtonClass} onClick={fitCanvas}>
+                  <Maximize2 />
+                  Fit canvas
+                </Button>
                 <Button onClick={() => void onRunTest()} disabled={runningTest}>
                   {runningTest ? <Loader2 className="animate-spin" /> : <Play />}
                   Run test
@@ -521,13 +552,18 @@ function WorkflowCanvas({
                     {nodes.length} nodes · {edges.length} paths
                   </span>
                 </div>
-                <div className="h-[560px] bg-[radial-gradient(circle_at_20%_10%,rgba(139,92,246,0.18),transparent_32%),radial-gradient(circle_at_80%_80%,rgba(34,211,238,0.14),transparent_30%)]">
+                <div className="relative isolate h-[560px] overflow-hidden bg-[radial-gradient(circle_at_20%_10%,rgba(139,92,246,0.18),transparent_32%),radial-gradient(circle_at_80%_80%,rgba(34,211,238,0.14),transparent_30%)]">
                   <ReactFlow<WorkflowGraphNode, Edge>
+                    className={flowCanvasClass}
                     nodes={nodes}
                     edges={edges}
                     nodeTypes={nodeTypes}
                     onNodeClick={selectNode}
-                    fitView
+                    onInit={(instance) => {
+                      requestAnimationFrame(() => {
+                        instance.fitView({ padding: 0.18, duration: 0 })
+                      })
+                    }}
                     minZoom={0.3}
                     maxZoom={1.5}
                     defaultEdgeOptions={graphEdgeOptions}
@@ -543,7 +579,7 @@ function WorkflowCanvas({
                       nodeColor={(node) => (node.id === selectedNodeId ? "#22d3ee" : "#6d28d9")}
                       className="!border !border-white/10 !bg-black/45"
                     />
-                    <Controls className="!border !border-white/10 !bg-black/45 !text-white" />
+                    <Controls className={flowControlsClass} />
                   </ReactFlow>
                 </div>
               </div>

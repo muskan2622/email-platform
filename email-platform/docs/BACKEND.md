@@ -56,7 +56,8 @@ Copy `.env.example` to `.env.local` and fill in keys.
 | `POST` | `/api/templates/:id/test` | Send test email via Resend (`{ "to": "..." }`) |
 | `GET/POST` | `/api/triggers` | List / create triggers |
 | `GET/PATCH/DELETE` | `/api/triggers/:id` | CRUD single trigger |
-| `POST` | `/api/ai/assist` | AI copy helper |
+| `POST` | `/api/ai/assist` | AI copy helper (includes live `platform_context`) |
+| `GET` | `/api/ai/context` | Live Supabase snapshot for Pulse AI |
 | `GET` | `/api/send-log` | Delivery log |
 
 ### Ingest an event

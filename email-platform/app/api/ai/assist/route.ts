@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
       body: typeof body.body === "string" ? body.body : undefined,
       tone: typeof body.tone === "string" ? body.tone : undefined,
       context: typeof body.context === "string" ? body.context : undefined,
+      platform_context:
+        typeof body.platform_context === "string" ? body.platform_context : undefined,
     })
     return jsonOk(result)
   } catch (err) {

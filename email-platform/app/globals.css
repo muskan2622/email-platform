@@ -259,6 +259,10 @@
   .glass-panel-glow {
     box-shadow: var(--flow-glass-shadow), var(--flow-glass-glow);
   }
+  /* React Flow pan/zoom paints outside strict paint containment — opt canvas cards out */
+  .glass-panel.glass-panel-canvas {
+    contain: layout style;
+  }
   .glass-panel::before {
     content: "";
     pointer-events: none;
@@ -308,18 +312,108 @@
     contain: strict;
     will-change: background;
   }
-  .react-flow,
-  .react-flow__renderer,
-  .react-flow__pane,
-  .react-flow__viewport {
-    contain: layout paint style;
-  }
   .react-flow__node {
     will-change: transform;
+  }
+  .react-flow.workflow-canvas {
+    --xy-background-color: transparent;
+    --xy-minimap-background-color: rgba(0, 0, 0, 0.45);
+    --xy-controls-button-background-color: rgba(0, 0, 0, 0.6);
+    --xy-controls-button-background-color-hover: rgba(0, 0, 0, 0.8);
+    --xy-controls-button-color: var(--flow-text);
+    --xy-controls-button-color-hover: #fff;
+    --xy-controls-button-border-color: rgba(255, 255, 255, 0.1);
   }
   .flow-pulse {
     animation: flow-pulse 2.2s ease-out infinite;
     will-change: transform, opacity;
+  }
+  .ai-copilot-glow {
+    box-shadow:
+      0 0 0 1px rgba(34, 211, 238, 0.15),
+      0 0 32px -8px rgba(56, 189, 248, 0.45),
+      0 0 48px -12px rgba(139, 92, 246, 0.35);
+    will-change: transform, box-shadow;
+  }
+  .ai-copilot-border-spin {
+    background: conic-gradient(
+      from var(--ai-spin, 0deg),
+      #22d3ee,
+      #6366f1,
+      #3b82f6,
+      #8b5cf6,
+      #22d3ee
+    );
+    animation: ai-border-spin 4s linear infinite;
+    will-change: transform;
+  }
+  .ai-panel-shell {
+    background: linear-gradient(
+      165deg,
+      rgba(12, 15, 26, 0.98) 0%,
+      rgba(8, 10, 18, 0.99) 55%,
+      rgba(10, 12, 22, 0.98) 100%
+    );
+    box-shadow:
+      0 0 0 1px rgba(34, 211, 238, 0.12),
+      0 24px 80px -24px rgba(0, 0, 0, 0.75),
+      0 0 60px -20px rgba(99, 102, 241, 0.25);
+    contain: layout style;
+    isolation: isolate;
+  }
+  .ai-panel-inner {
+    background: rgba(10, 12, 20, 0.92);
+  }
+  .ai-panel-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+  }
+  .ai-panel-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .ai-panel-scroll::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgba(99, 102, 241, 0.35);
+  }
+  .ai-chip-solid {
+    background: rgba(18, 22, 36, 0.95);
+    border-color: rgba(148, 163, 184, 0.22);
+  }
+  .ai-overlay-dim {
+    background: rgba(2, 4, 12, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .ai-shimmer-line {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(34, 211, 238, 0.35) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: ai-shimmer 1.8s ease-in-out infinite;
+  }
+}
+
+@property --ai-spin {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ai-border-spin {
+  to {
+    --ai-spin: 360deg;
+  }
+}
+
+@keyframes ai-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 
