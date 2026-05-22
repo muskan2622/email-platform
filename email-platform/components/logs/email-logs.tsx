@@ -52,7 +52,7 @@ export function EmailLogs() {
               <p className={`text-3xl font-semibold tabular-nums ${s.color}`}>
                 {loading ? "—" : <AnimatedCounter value={s.value} />}
               </p>
-              <p className="mt-1 text-sm text-white/45">{s.label}</p>
+              <p className="mt-1 text-sm text-flow-muted">{s.label}</p>
             </GlassCard>
           </StaggerItem>
         ))}
@@ -74,7 +74,7 @@ export function EmailLogs() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[600px] text-left text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] text-xs uppercase tracking-wider text-white/40">
+                <tr className="border-b border-flow-glass-faint text-xs uppercase tracking-wider text-flow-faint">
                   <th className="px-5 py-4 font-medium">Recipient</th>
                   <th className="px-5 py-4 font-medium">Subject</th>
                   <th className="px-5 py-4 font-medium">Trigger</th>
@@ -92,15 +92,15 @@ export function EmailLogs() {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.06 }}
-                      className="group border-b border-white/[0.04] transition-colors hover:bg-white/[0.03]"
+                      className="group border-b border-flow-glass-faint transition-colors hover:bg-flow-glass-subtle"
                     >
-                      <td className="px-5 py-4 font-mono text-white/80">
+                      <td className="px-5 py-4 font-mono text-flow-secondary">
                         {row.end_users?.email ?? "—"}
                       </td>
-                      <td className="px-5 py-4 text-white/70">
+                      <td className="px-5 py-4 text-flow-secondary">
                         {row.rendered_subject ?? row.templates?.name ?? "—"}
                       </td>
-                      <td className="px-5 py-4 text-white/50">
+                      <td className="px-5 py-4 text-flow-muted">
                         {row.triggers?.name ?? "—"}
                       </td>
                       <td className="px-5 py-4">
@@ -111,7 +111,7 @@ export function EmailLogs() {
                           {ui.label}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-white/35">
+                      <td className="px-5 py-4 text-flow-faint">
                         {formatRelativeTime(row.created_at)}
                       </td>
                     </motion.tr>

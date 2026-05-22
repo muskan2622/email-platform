@@ -22,7 +22,8 @@ export function FloatingDock() {
       initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.3 }}
-      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 gap-1 rounded-2xl border border-white/10 bg-black/60 p-1.5 backdrop-blur-2xl md:hidden"
+      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 gap-1 rounded-2xl border border-flow-glass p-1.5 backdrop-blur-2xl md:hidden theme-transition"
+      style={{ backgroundColor: "var(--flow-dock-bg)" }}
     >
       {dock.map((item) => {
         const active = pathname === item.href
@@ -34,8 +35,8 @@ export function FloatingDock() {
               className={cn(
                 "flex h-11 w-11 items-center justify-center rounded-xl transition-colors",
                 active
-                  ? "bg-gradient-to-b from-violet-500/30 to-cyan-500/20 text-white shadow-[0_0_20px_-4px_rgba(99,102,241,0.5)]"
-                  : "text-white/50"
+                  ? "bg-gradient-to-b from-violet-500/30 to-cyan-500/20 text-flow shadow-[0_0_20px_-4px_rgba(99,102,241,0.5)]"
+                  : "text-flow-muted"
               )}
             >
               <Icon className="h-5 w-5" />

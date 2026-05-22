@@ -45,8 +45,8 @@ export function AnimatedChart() {
     <GlassCard className="p-5 md:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-white">Delivery throughput</h3>
-          <p className="text-xs text-white/40">
+          <h3 className="text-sm font-medium text-flow">Delivery throughput</h3>
+          <p className="text-xs text-flow-muted">
             {loading ? "Loading…" : `Last 12h · ${totalSent} total sent`}
           </p>
         </div>

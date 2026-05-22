@@ -57,7 +57,7 @@ export function AiAssistant({
           animate={{ rotate: [0, 5, -5, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         >
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/50 backdrop-blur-md">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-flow-glass bg-flow-glass-inset backdrop-blur-md">
             <Sparkles className="h-4 w-4 text-violet-300" />
           </div>
         </motion.div>
@@ -65,7 +65,7 @@ export function AiAssistant({
           <p className="text-xs font-medium uppercase tracking-widest text-violet-300/80">
             Pulse AI
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-white/80">
+          <p className="mt-2 text-sm leading-relaxed text-flow-secondary">
             {text || statsText}
           </p>
           {!compact && (

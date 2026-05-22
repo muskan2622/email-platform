@@ -13,13 +13,13 @@ export function HeroSection() {
 
   return (
     <GlassCard glow className="relative overflow-hidden p-6 md:p-10">
-      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-500/20 blur-[80px]" />
+      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-500/15 blur-[80px] dark:bg-violet-500/20" />
       <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-200"
+            className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-700 dark:text-violet-200"
           >
             <GlowPulse color="violet" />
             Connected to Supabase
@@ -28,10 +28,10 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="text-3xl font-semibold tracking-tight text-white md:text-5xl md:leading-[1.1]"
+            className="text-3xl font-semibold tracking-tight text-flow md:text-5xl md:leading-[1.1]"
           >
             Automate every inbox
-            <span className="block bg-gradient-to-r from-violet-300 via-white to-cyan-300 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-violet-600 via-[var(--flow-text)] to-cyan-600 bg-clip-text text-transparent dark:from-violet-300 dark:via-white dark:to-cyan-300">
               with live platform data
             </span>
           </motion.h2>
@@ -39,7 +39,7 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="mt-4 max-w-lg text-base text-white/50"
+            className="mt-4 max-w-lg text-base text-flow-muted"
           >
             {data?.templates.length ?? 0} templates · {data?.activeTriggers ?? 0} active triggers ·{" "}
             {data?.eventsCount ?? 0} events in stream
@@ -56,7 +56,7 @@ export function HeroSection() {
             <Link href="/events">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-xl border border-flow-glass bg-flow-glass-subtle px-5 py-2.5 text-sm font-medium text-flow-secondary transition-colors hover:bg-flow-glass-hover"
               >
                 Event monitor
                 <ArrowUpRight className="h-4 w-4" />
@@ -84,11 +84,11 @@ export function HeroSection() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="min-w-[120px] rounded-xl border border-white/[0.08] bg-black/30 px-4 py-3 backdrop-blur-md"
+              className="min-w-[120px] rounded-xl border border-flow-glass-faint bg-flow-glass-inset px-4 py-3 backdrop-blur-md"
             >
-              <stat.icon className="mb-2 h-4 w-4 text-cyan-400" />
-              <p className="text-lg font-semibold tabular-nums text-white">{stat.value}</p>
-              <p className="text-[11px] text-white/40">{stat.label}</p>
+              <stat.icon className="mb-2 h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+              <p className="text-lg font-semibold tabular-nums text-flow">{stat.value}</p>
+              <p className="text-[11px] text-flow-faint">{stat.label}</p>
             </div>
           ))}
         </motion.div>

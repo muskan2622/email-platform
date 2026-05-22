@@ -49,6 +49,37 @@
 }
 
 :root {
+  /* FLOW glass theme — light */
+  --flow-page-bg: #e4eaf4;
+  --flow-page-bg-end: #d8e2f0;
+  --flow-blob-1: rgba(56, 189, 186, 0.22);
+  --flow-blob-2: rgba(56, 132, 255, 0.18);
+  --flow-blob-3: rgba(99, 102, 241, 0.14);
+  --flow-grid: rgba(30, 58, 95, 0.06);
+  --flow-spotlight: rgba(56, 132, 255, 0.06);
+  --flow-glass-bg: rgba(255, 255, 255, 0.62);
+  --flow-glass-bg-subtle: rgba(255, 255, 255, 0.45);
+  --flow-glass-bg-hover: rgba(255, 255, 255, 0.78);
+  --flow-glass-bg-inset: rgba(255, 255, 255, 0.5);
+  --flow-glass-border: rgba(255, 255, 255, 0.92);
+  --flow-glass-border-hover: rgba(148, 163, 184, 0.35);
+  --flow-glass-border-faint: rgba(148, 163, 184, 0.22);
+  --flow-glass-shadow: 0 8px 32px -12px rgba(30, 58, 95, 0.12), 0 2px 8px rgba(30, 58, 95, 0.06);
+  --flow-glass-glow: 0 0 48px -16px rgba(56, 132, 255, 0.2);
+  --flow-glass-highlight: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  --flow-text: #152238;
+  --flow-text-secondary: rgba(21, 34, 56, 0.78);
+  --flow-text-muted: rgba(21, 34, 56, 0.52);
+  --flow-text-faint: rgba(21, 34, 56, 0.36);
+  --flow-accent: #3b82f6;
+  --flow-accent-secondary: #8b5cf6;
+  --flow-dock-bg: rgba(255, 255, 255, 0.72);
+  --flow-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -84,6 +115,36 @@
 }
 
 .dark {
+  /* FLOW glass theme — dark */
+  --flow-page-bg: #06070d;
+  --flow-page-bg-end: #030306;
+  --flow-blob-1: rgba(139, 92, 246, 0.2);
+  --flow-blob-2: rgba(34, 211, 238, 0.15);
+  --flow-blob-3: rgba(99, 102, 241, 0.12);
+  --flow-grid: rgba(255, 255, 255, 0.03);
+  --flow-spotlight: rgba(99, 102, 241, 0.08);
+  --flow-glass-bg: rgba(255, 255, 255, 0.03);
+  --flow-glass-bg-subtle: rgba(255, 255, 255, 0.02);
+  --flow-glass-bg-hover: rgba(255, 255, 255, 0.06);
+  --flow-glass-bg-inset: rgba(0, 0, 0, 0.3);
+  --flow-glass-border: rgba(255, 255, 255, 0.08);
+  --flow-glass-border-hover: rgba(255, 255, 255, 0.15);
+  --flow-glass-border-faint: rgba(255, 255, 255, 0.06);
+  --flow-glass-shadow: 0 8px 32px -12px rgba(0, 0, 0, 0.5);
+  --flow-glass-glow: 0 0 60px -20px rgba(99, 102, 241, 0.25);
+  --flow-glass-highlight: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 100%
+  );
+  --flow-text: #f1f5f9;
+  --flow-text-secondary: rgba(241, 245, 249, 0.85);
+  --flow-text-muted: rgba(241, 245, 249, 0.5);
+  --flow-text-faint: rgba(241, 245, 249, 0.35);
+  --flow-accent: #8b5cf6;
+  --flow-accent-secondary: #22d3ee;
+  --flow-dock-bg: rgba(0, 0, 0, 0.6);
+
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -121,11 +182,93 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-[#030306] text-foreground;
-  }
   html {
     @apply font-sans scroll-smooth;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--flow-page-bg);
+    color: var(--flow-text);
+    transition:
+      background-color var(--flow-transition),
+      color var(--flow-transition);
+  }
+}
+
+@layer utilities {
+  .text-flow {
+    color: var(--flow-text);
+    transition: color var(--flow-transition);
+  }
+  .text-flow-secondary {
+    color: var(--flow-text-secondary);
+    transition: color var(--flow-transition);
+  }
+  .text-flow-muted {
+    color: var(--flow-text-muted);
+    transition: color var(--flow-transition);
+  }
+  .text-flow-faint {
+    color: var(--flow-text-faint);
+    transition: color var(--flow-transition);
+  }
+  .border-flow-glass {
+    border-color: var(--flow-glass-border);
+    transition: border-color var(--flow-transition);
+  }
+  .border-flow-glass-faint {
+    border-color: var(--flow-glass-border-faint);
+    transition: border-color var(--flow-transition);
+  }
+  .hover\:border-flow-glass-hover:hover {
+    border-color: var(--flow-glass-border-hover);
+  }
+  .bg-flow-glass {
+    background-color: var(--flow-glass-bg);
+    transition: background-color var(--flow-transition);
+  }
+  .bg-flow-glass-subtle {
+    background-color: var(--flow-glass-bg-subtle);
+    transition: background-color var(--flow-transition);
+  }
+  .bg-flow-glass-hover:hover {
+    background-color: var(--flow-glass-bg-hover);
+  }
+  .bg-flow-glass-inset {
+    background-color: var(--flow-glass-bg-inset);
+    transition: background-color var(--flow-transition);
+  }
+  .glass-panel {
+    background: var(--flow-glass-bg);
+    border: 1px solid var(--flow-glass-border);
+    box-shadow: var(--flow-glass-shadow);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition:
+      background-color var(--flow-transition),
+      border-color var(--flow-transition),
+      box-shadow var(--flow-transition);
+  }
+  .glass-panel-glow {
+    box-shadow: var(--flow-glass-shadow), var(--flow-glass-glow);
+  }
+  .glass-panel::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--flow-glass-highlight);
+  }
+  .theme-transition {
+    transition:
+      background-color var(--flow-transition),
+      color var(--flow-transition),
+      border-color var(--flow-transition),
+      box-shadow var(--flow-transition);
   }
 }
 

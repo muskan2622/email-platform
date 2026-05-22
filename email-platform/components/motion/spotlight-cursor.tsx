@@ -6,7 +6,7 @@ import { useEffect } from "react"
 export function SpotlightCursor() {
   const x = useMotionValue(0)
   const y = useMotionValue(0)
-  const background = useMotionTemplate`radial-gradient(600px circle at ${x}px ${y}px, rgba(99,102,241,0.08), transparent 60%)`
+  const background = useMotionTemplate`radial-gradient(600px circle at ${x}px ${y}px, var(--flow-spotlight), transparent 60%)`
 
   useEffect(() => {
     const move = (e: MouseEvent) => {

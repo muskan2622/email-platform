@@ -29,6 +29,10 @@ Copy and run each file in order in the Supabase dashboard SQL editor.
 | `events` | Incoming event stream + processing results |
 | `send_log` | Delivery history and deduplication |
 
+### Demo data (optional)
+
+Run `supabase/migrations/20250522000002_seed_demo_data.sql` in the SQL Editor to populate templates, triggers, events, and send logs for dashboards and charts. Safe to re-run.
+
 ### Example scenario (seeded)
 
 Event `user.plan_upgraded` → trigger **Welcome to paid (once)**:

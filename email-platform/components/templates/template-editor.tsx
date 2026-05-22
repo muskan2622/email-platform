@@ -78,14 +78,14 @@ export function TemplateEditor() {
           <div className="space-y-4">
             {templates.length > 1 ? (
               <GlassCard className="p-3">
-                <label className="mb-2 block text-xs text-white/40">Template</label>
+                <label className="mb-2 block text-xs text-flow-faint">Template</label>
                 <select
                   value={selected?.id ?? ""}
                   onChange={(e) => setSelectedId(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white"
+                  className="w-full rounded-xl border border-flow-glass bg-flow-glass-inset px-3 py-2 text-sm text-flow"
                 >
                   {templates.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-black">
+                    <option key={t.id} value={t.id} className="bg-[var(--flow-page-bg-end)]">
                       {t.name} ({t.slug})
                     </option>
                   ))}
@@ -94,7 +94,7 @@ export function TemplateEditor() {
             ) : null}
             <GlassCard className="p-4 md:p-5">
               <div className="mb-4 flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-widest text-white/40">
+                <span className="text-xs font-medium uppercase tracking-widest text-flow-faint">
                   Editor · {selected?.status}
                 </span>
                 <div className="flex gap-1">
@@ -102,25 +102,25 @@ export function TemplateEditor() {
                     <button
                       key={i}
                       type="button"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/50 transition-colors hover:bg-white/5 hover:text-white"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-flow-glass text-flow-muted transition-colors hover:bg-flow-glass-subtle hover:text-flow"
                     >
                       <Icon className="h-3.5 w-3.5" />
                     </button>
                   ))}
                 </div>
               </div>
-              <label className="mb-2 block text-xs text-white/40">Subject</label>
+              <label className="mb-2 block text-xs text-flow-faint">Subject</label>
               <input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="mb-4 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-white outline-none ring-violet-500/30 transition-shadow focus:ring-2"
+                className="mb-4 w-full rounded-xl border border-flow-glass bg-flow-glass-inset px-4 py-2.5 text-sm text-flow outline-none ring-violet-500/30 transition-shadow focus:ring-2"
               />
-              <label className="mb-2 block text-xs text-white/40">Body</label>
+              <label className="mb-2 block text-xs text-flow-faint">Body</label>
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={12}
-                className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-sm leading-relaxed text-white/90 outline-none ring-violet-500/30 transition-shadow focus:ring-2"
+                className="w-full resize-none rounded-xl border border-flow-glass bg-flow-glass-inset px-4 py-3 font-mono text-sm leading-relaxed text-flow-secondary outline-none ring-violet-500/30 transition-shadow focus:ring-2"
               />
               <div className="mt-4 flex items-center gap-2">
                 <MagneticButton className="!text-xs" onClick={save}>
@@ -132,7 +132,7 @@ export function TemplateEditor() {
                   Save to database
                 </MagneticButton>
                 {saveMsg ? (
-                  <span className="text-xs text-white/50">{saveMsg}</span>
+                  <span className="text-xs text-flow-muted">{saveMsg}</span>
                 ) : null}
               </div>
             </GlassCard>
@@ -146,13 +146,13 @@ export function TemplateEditor() {
             className="lg:sticky lg:top-24 lg:self-start"
           >
             <GlassCard glow className="overflow-hidden p-1">
-              <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3">
+              <div className="flex items-center gap-2 border-b border-flow-glass-faint px-4 py-3">
                 <div className="flex gap-1.5">
                   {["bg-rose-400/80", "bg-amber-400/80", "bg-emerald-400/80"].map((c) => (
                     <span key={c} className={`h-2.5 w-2.5 rounded-full ${c}`} />
                   ))}
                 </div>
-                <span className="text-xs text-white/40">Live preview</span>
+                <span className="text-xs text-flow-faint">Live preview</span>
                 <Sparkles className="ml-auto h-3.5 w-3.5 text-violet-400" />
               </div>
               <div className="p-6 md:p-8">
@@ -160,10 +160,10 @@ export function TemplateEditor() {
                   key={subject}
                   initial={{ opacity: 0.5, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 border-b border-white/10 pb-4"
+                  className="mb-6 border-b border-flow-glass-faint pb-4"
                 >
-                  <p className="text-xs text-white/35">Subject</p>
-                  <p className="mt-1 text-lg font-medium text-white">
+                  <p className="text-xs text-flow-faint">Subject</p>
+                  <p className="mt-1 text-lg font-medium text-flow">
                     {subject.replace(/\{\{first_name\}\}/g, previewName).replace(/\{\{plan_name\}\}/g, "Pro")}
                   </p>
                 </motion.div>
@@ -171,7 +171,7 @@ export function TemplateEditor() {
                   key={body}
                   initial={{ opacity: 0.7 }}
                   animate={{ opacity: 1 }}
-                  className="prose prose-invert max-w-none text-sm leading-relaxed text-white/75"
+                  className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-flow-secondary"
                 >
                   {body.split("\n").map((line, i) => (
                     <p key={i} className="mb-3">

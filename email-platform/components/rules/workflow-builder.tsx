@@ -84,8 +84,8 @@ export function WorkflowBuilder() {
         />
       ) : (
         <GlassCard className="relative min-h-[480px] overflow-hidden p-6 md:p-10">
-          <p className="mb-6 text-sm text-white/50">
-            Showing: <span className="text-white">{active.name}</span>
+          <p className="mb-6 text-sm text-flow-muted">
+            Showing: <span className="text-flow">{active.name}</span>
             {triggers.length > 1 ? ` · ${triggers.length} triggers total` : ""}
           </p>
           <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
@@ -128,10 +128,10 @@ export function WorkflowBuilder() {
                   <div
                     className={`w-full max-w-[200px] rounded-2xl border p-4 shadow-[0_0_40px_-16px_rgba(99,102,241,0.4)] backdrop-blur-md ${node.color}`}
                   >
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/30">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-flow-glass-faint bg-flow-glass-inset">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <p className="font-medium text-white">{node.label}</p>
+                    <p className="font-medium text-flow">{node.label}</p>
                     <p className="mt-1 line-clamp-2 text-xs opacity-70">{node.sub}</p>
                   </div>
                 </motion.div>
@@ -139,7 +139,7 @@ export function WorkflowBuilder() {
             })}
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-6">
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-flow-glass-faint pt-6">
             <div className="flex flex-wrap gap-2">
               {pills.length > 0 ? (
                 pills.map((pill) => (
@@ -151,7 +151,7 @@ export function WorkflowBuilder() {
                   </motion.span>
                 ))
               ) : (
-                <span className="text-xs text-white/40">No condition rules</span>
+                <span className="text-xs text-flow-faint">No condition rules</span>
               )}
               {active.send_once_per_user ? (
                 <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">
@@ -162,15 +162,15 @@ export function WorkflowBuilder() {
           </div>
 
           {triggers.length > 1 ? (
-            <ul className="mt-8 space-y-2 border-t border-white/[0.06] pt-6">
-              <p className="mb-2 text-xs uppercase tracking-wider text-white/40">All triggers</p>
+            <ul className="mt-8 space-y-2 border-t border-flow-glass-faint pt-6">
+              <p className="mb-2 text-xs uppercase tracking-wider text-flow-faint">All triggers</p>
               {triggers.map((t) => (
                 <li
                   key={t.id}
-                  className="flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-lg border border-flow-glass-faint px-3 py-2 text-sm"
                 >
-                  <span className="text-white/80">{t.name}</span>
-                  <span className="font-mono text-xs text-white/40">{t.event_type}</span>
+                  <span className="text-flow-secondary">{t.name}</span>
+                  <span className="font-mono text-xs text-flow-faint">{t.event_type}</span>
                 </li>
               ))}
             </ul>

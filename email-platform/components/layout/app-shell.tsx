@@ -7,7 +7,7 @@ import { SpotlightCursor } from "@/components/motion/spotlight-cursor"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="relative min-h-screen text-flow">
       <AmbientBackground />
       <SpotlightCursor />
       <FloatingSidebar />
