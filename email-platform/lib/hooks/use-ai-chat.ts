@@ -1,6 +1,11 @@
 "use client"
 
 import { useCallback } from "react"
+import {
+  buildLocalDataResponse,
+  isDataQuery,
+  isPlatformSummarizeQuery,
+} from "@/lib/ai/local-assist"
 import { buildPlatformContextSummary } from "@/lib/ai/platform-context"
 import { apiPost } from "@/lib/api/client"
 import type { PlatformStats } from "@/lib/hooks/use-platform-data"
@@ -66,18 +71,40 @@ export function useAiChat(platformData?: PlatformStats | null) {
       useAiAssistantStore.setState({ isTyping: true, isStreaming: true })
 
       try {
-        const result = await apiPost<{
+        const hasEmailBody = Boolean(emailContext.body?.trim() || body.trim())
+        const useLocal =
+          isDataQuery(input) ||
+          isPlatformSummarizeQuery(input, hasEmailBody) ||
+          (input.trim().toLowerCase() === "summarize" && body.length < 80) ||
+          (activeTab === "summarize" && !hasEmailBody)
+
+        let result: {
           subject: string | null
           body_html: string
           suggestions: string[]
-        }>("/api/ai/assist", {
-          action,
-          subject,
-          body,
-          tone: slash?.tone,
-          context: input.startsWith("/") ? input : `${activeTab}: ${input}`,
-          platform_context: platformContext,
-        })
+        }
+
+        if (useLocal) {
+          const local = buildLocalDataResponse(input, platformData ?? null)
+          result = {
+            subject: null,
+            body_html: local?.body_html ?? "No data available.",
+            suggestions: local?.suggestions ?? [],
+          }
+        } else {
+          result = await apiPost<{
+            subject: string | null
+            body_html: string
+            suggestions: string[]
+          }>("/api/ai/assist", {
+            action,
+            subject,
+            body,
+            tone: slash?.tone,
+            context: input.startsWith("/") ? input : `${activeTab}: ${input}`,
+            platform_context: platformContext,
+          })
+        }
 
         const parts: string[] = []
         if (result.subject) parts.push(`**Subject**\n${result.subject}`)
@@ -119,7 +146,7 @@ export function useAiChat(platformData?: PlatformStats | null) {
         store.removeStreamingFlag(assistantId)
       }
     },
-    [store, platformContext]
+    [store, platformContext, platformData]
   )
 
   return { sendUserMessage }
