@@ -4,12 +4,19 @@ export type SendLogStatus = "sent" | "failed" | "skipped"
 export type ConditionOperator =
   | "eq"
   | "neq"
+  | "contains"
+  | "regex"
   | "gt"
   | "gte"
   | "lt"
   | "lte"
+  | "between"
   | "in"
   | "not_in"
+  | "in_array"
+  | "date_before"
+  | "date_after"
+  | "date_between"
   | "exists"
   | "not_exists"
 
@@ -21,7 +28,7 @@ export interface ConditionRule {
 
 export interface ConditionGroup {
   operator: "and" | "or"
-  rules: ConditionRule[]
+  rules: Array<ConditionRule | ConditionGroup>
 }
 
 export interface Template {
@@ -87,6 +94,10 @@ export interface SendLogEntry {
 
 export interface IncomingEvent {
   type: string
+  message_id?: string
+  source?: string
+  timestamp?: string
+  identifiers?: Record<string, unknown>
   payload?: Record<string, unknown>
   user?: {
     external_id: string

@@ -7,6 +7,13 @@ export function parseIncomingEvent(body: unknown): IncomingEvent | null {
 
   const event: IncomingEvent = {
     type: b.type.trim(),
+    message_id: typeof b.message_id === "string" ? b.message_id : undefined,
+    source: typeof b.source === "string" ? b.source : "api",
+    timestamp: typeof b.timestamp === "string" ? b.timestamp : undefined,
+    identifiers:
+      b.identifiers && typeof b.identifiers === "object"
+        ? (b.identifiers as Record<string, unknown>)
+        : undefined,
     payload:
       b.payload && typeof b.payload === "object"
         ? (b.payload as Record<string, unknown>)

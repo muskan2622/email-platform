@@ -42,6 +42,44 @@ enum DeliveryStatus {
   failed
 }
 
+enum WorkflowStatus {
+  draft
+  active
+  paused
+  archived
+}
+
+enum WorkflowRunStatus {
+  queued
+  running
+  waiting
+  completed
+  failed
+  cancelled
+}
+
+enum WorkflowNodeState {
+  pending
+  running
+  waiting
+  completed
+  skipped
+  failed
+}
+
+enum WorkflowNodeType {
+  trigger
+  condition
+  frequency_cap
+  delay
+  wait_until
+  branch
+  send_template
+  webhook
+  goal
+  exit
+}
+
 model Template {
   id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   slug               String             @unique
@@ -204,4 +242,191 @@ model EmailWebhookEvent {
 
   @@unique([provider, providerMessageId, eventType, occurredAt])
   @@map("email_webhook_events")
+}
+
+model Workflow {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  slug         String             @unique
+  description  String?
+  status       WorkflowStatus     @default(draft)
+  triggerEvent String             @map("trigger_event")
+  graph        Json               @default("{\"nodes\":[],\"edges\":[]}")
+  settings     Json               @default("{}")
+  version      Int                @default(1)
+  createdBy    String?            @map("created_by") @db.Uuid
+  updatedBy    String?            @map("updated_by") @db.Uuid
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  nodes        WorkflowNode[]
+  ruleGroups   RuleGroup[]
+  runs         AutomationRun[]
+  states       WorkflowState[]
+  attempts     DeliveryAttempt[]
+  deadLetters  WorkflowDeadLetter[]
+
+  @@index([status, triggerEvent, updatedAt])
+  @@map("workflows")
+}
+
+model WorkflowNode {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflowId  String           @map("workflow_id") @db.Uuid
+  nodeKey     String           @map("node_key")
+  nodeType    WorkflowNodeType @map("node_type")
+  config      Json             @default("{}")
+  position    Json             @default("{\"x\":0,\"y\":0}")
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  workflow    Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  ruleGroups  RuleGroup[]
+
+  @@unique([workflowId, nodeKey])
+  @@index([workflowId, nodeType])
+  @@map("workflow_nodes")
+}
+
+model RuleGroup {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflowId    String?         @map("workflow_id") @db.Uuid
+  nodeId        String?         @map("node_id") @db.Uuid
+  parentGroupId String?         @map("parent_group_id") @db.Uuid
+  operator      String          @default("and")
+  sortOrder     Int             @default(0) @map("sort_order")
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  workflow      Workflow?       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  node          WorkflowNode?   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  parent        RuleGroup?      @relation("RuleGroupTree", fields: [parentGroupId], references: [id], onDelete: Cascade)
+  children      RuleGroup[]     @relation("RuleGroupTree")
+  conditions    ConditionRule[]
+
+  @@map("rule_groups")
+}
+
+model ConditionRule {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId   String    @map("group_id") @db.Uuid
+  fieldPath String    @map("field_path")
+  operator  String
+  value     Json?
+  valueType String    @default("json") @map("value_type")
+  sortOrder Int       @default(0) @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  group     RuleGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, sortOrder])
+  @@map("condition_rules")
+}
+
+model EventLog {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  messageId      String          @map("message_id")
+  type           String
+  source         String          @default("api")
+  userExternalId String?         @map("user_external_id")
+  identifiers    Json            @default("{}")
+  payload        Json            @default("{}")
+  userMetadata   Json            @default("{}") @map("user_metadata")
+  occurredAt     DateTime        @map("occurred_at") @db.Timestamptz
+  receivedAt     DateTime        @default(now()) @map("received_at") @db.Timestamptz
+  processedAt    DateTime?       @map("processed_at") @db.Timestamptz
+  replayOf       String?         @map("replay_of") @db.Uuid
+  replayParent   EventLog?       @relation("EventReplay", fields: [replayOf], references: [id], onDelete: SetNull)
+  replays        EventLog[]      @relation("EventReplay")
+  runs           AutomationRun[]
+
+  @@unique([source, messageId])
+  @@index([type, receivedAt])
+  @@index([userExternalId, receivedAt])
+  @@map("event_log")
+}
+
+model AutomationRun {
+  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflowId     String               @map("workflow_id") @db.Uuid
+  eventLogId     String?              @map("event_log_id") @db.Uuid
+  userExternalId String?              @map("user_external_id")
+  status         WorkflowRunStatus    @default(running)
+  currentNodeKey String?              @map("current_node_key")
+  idempotencyKey String               @unique @map("idempotency_key")
+  startedAt      DateTime             @default(now()) @map("started_at") @db.Timestamptz
+  completedAt    DateTime?            @map("completed_at") @db.Timestamptz
+  error          String?
+  context        Json                 @default("{}")
+  workflow       Workflow             @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  eventLog       EventLog?            @relation(fields: [eventLogId], references: [id], onDelete: SetNull)
+  states         WorkflowState[]
+  attempts       DeliveryAttempt[]
+  deadLetters    WorkflowDeadLetter[]
+
+  @@index([workflowId, status, startedAt])
+  @@index([userExternalId, startedAt])
+  @@map("automation_runs")
+}
+
+model WorkflowState {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  runId       String            @map("run_id") @db.Uuid
+  workflowId  String            @map("workflow_id") @db.Uuid
+  nodeKey     String            @map("node_key")
+  status      WorkflowNodeState @default(pending)
+  resumeAt    DateTime?         @map("resume_at") @db.Timestamptz
+  attempts    Int               @default(0)
+  lockToken   String?           @map("lock_token")
+  lockedUntil DateTime?         @map("locked_until") @db.Timestamptz
+  input       Json              @default("{}")
+  output      Json              @default("{}")
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  run         AutomationRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  workflow    Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, nodeKey])
+  @@map("workflow_state")
+}
+
+model DeliveryAttempt {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  runId             String?        @map("run_id") @db.Uuid
+  workflowId         String?        @map("workflow_id") @db.Uuid
+  nodeKey            String?        @map("node_key")
+  templateId         String?        @map("template_id") @db.Uuid
+  provider           EmailProvider
+  recipient          String
+  status             DeliveryStatus
+  attempt            Int            @default(1)
+  idempotencyKey     String         @map("idempotency_key")
+  providerMessageId  String?        @map("provider_message_id")
+  error              String?
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  run                AutomationRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+  workflow           Workflow?      @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+
+  @@unique([idempotencyKey, attempt])
+  @@index([runId, createdAt])
+  @@map("delivery_attempts")
+}
+
+model WorkflowLock {
+  key       String   @id
+  owner     String
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("workflow_locks")
+}
+
+model WorkflowDeadLetter {
+  id         String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  runId      String?        @map("run_id") @db.Uuid
+  workflowId String?        @map("workflow_id") @db.Uuid
+  queueName  String         @map("queue_name")
+  reason     String
+  payload    Json           @default("{}")
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  replayedAt DateTime?      @map("replayed_at") @db.Timestamptz
+  run        AutomationRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+  workflow   Workflow?      @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+
+  @@map("workflow_dead_letters")
 }
