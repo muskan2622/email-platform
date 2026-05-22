@@ -1,26 +1,26 @@
 "use client"
 
-import { motion, type HTMLMotionProps } from "framer-motion"
-import type { ReactNode } from "react"
+import { memo, type ComponentPropsWithoutRef, type ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
-export function GlassCard({
-  className,
-  children,
-  glow = false,
-  ...props
-}: Omit<HTMLMotionProps<"div">, "children"> & { children: ReactNode; glow?: boolean }) {
+type GlassCardProps = ComponentPropsWithoutRef<"div"> & {
+  children: ReactNode
+  glow?: boolean
+}
+
+function GlassCardBase({ className, children, glow = false, ...props }: GlassCardProps) {
   return (
-    <motion.div
-      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+    <div
       className={cn(
-        "glass-panel relative overflow-hidden rounded-2xl",
+        "glass-panel relative overflow-hidden rounded-2xl transform-gpu transition-[border-color,background-color,box-shadow] duration-150",
         glow && "glass-panel-glow",
         className
       )}
       {...props}
     >
       <div className="relative z-[1]">{children}</div>
-    </motion.div>
+    </div>
   )
 }
+
+export const GlassCard = memo(GlassCardBase)

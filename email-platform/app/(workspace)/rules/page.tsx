@@ -1,4 +1,12 @@
-import { WorkflowBuilder } from "@/components/rules/workflow-builder"
+import dynamic from "next/dynamic"
+import { LoadingState } from "@/components/ui/loading-state"
+
+const WorkflowBuilder = dynamic(
+  () => import("@/components/rules/workflow-builder").then((mod) => mod.WorkflowBuilder),
+  {
+    loading: () => <LoadingState rows={6} />,
+  }
+)
 
 export default function RulesPage() {
   return <WorkflowBuilder />

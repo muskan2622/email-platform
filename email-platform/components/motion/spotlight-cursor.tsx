@@ -1,27 +1,34 @@
 "use client"
 
-import { motion, useMotionTemplate, useMotionValue } from "framer-motion"
-import { useEffect } from "react"
+import { memo, useEffect, useRef } from "react"
 
-export function SpotlightCursor() {
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const background = useMotionTemplate`radial-gradient(600px circle at ${x}px ${y}px, var(--flow-spotlight), transparent 60%)`
+function SpotlightCursorBase() {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const frame = useRef<number | null>(null)
+  const point = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
-    const move = (e: MouseEvent) => {
-      x.set(e.clientX)
-      y.set(e.clientY)
-    }
-    window.addEventListener("mousemove", move, { passive: true })
-    return () => window.removeEventListener("mousemove", move)
-  }, [x, y])
+    const move = (event: PointerEvent) => {
+      point.current = { x: event.clientX, y: event.clientY }
+      if (frame.current !== null) return
 
-  return (
-    <motion.div
-      className="pointer-events-none fixed inset-0 z-[1]"
-      style={{ background }}
-      aria-hidden
-    />
-  )
+      frame.current = requestAnimationFrame(() => {
+        frame.current = null
+        const el = ref.current
+        if (!el) return
+        el.style.setProperty("--spotlight-x", `${point.current.x}px`)
+        el.style.setProperty("--spotlight-y", `${point.current.y}px`)
+      })
+    }
+
+    window.addEventListener("pointermove", move, { passive: true })
+    return () => {
+      window.removeEventListener("pointermove", move)
+      if (frame.current !== null) cancelAnimationFrame(frame.current)
+    }
+  }, [])
+
+  return <div ref={ref} className="pointer-events-none fixed inset-0 z-[1] flow-spotlight" aria-hidden />
 }
+
+export const SpotlightCursor = memo(SpotlightCursorBase)

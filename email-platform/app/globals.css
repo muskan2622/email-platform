@@ -193,6 +193,8 @@
   body {
     background-color: var(--flow-page-bg);
     color: var(--flow-text);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
     transition:
       background-color var(--flow-transition),
       color var(--flow-transition);
@@ -246,8 +248,9 @@
     background: var(--flow-glass-bg);
     border: 1px solid var(--flow-glass-border);
     box-shadow: var(--flow-glass-shadow);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    contain: layout paint style;
     transition:
       background-color var(--flow-transition),
       border-color var(--flow-transition),
@@ -271,11 +274,73 @@
       border-color var(--flow-transition),
       box-shadow var(--flow-transition);
   }
+  .flow-ambient {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(72px);
+    opacity: 0.82;
+    transform: translateZ(0);
+    will-change: transform;
+    contain: strict;
+  }
+  .flow-ambient-a {
+    left: -12%;
+    top: 10%;
+    width: 44vh;
+    height: 44vh;
+    background: var(--flow-blob-1);
+  }
+  .flow-ambient-b {
+    right: -10%;
+    top: 32%;
+    width: 42vh;
+    height: 42vh;
+    background: var(--flow-blob-2);
+  }
+  .flow-spotlight {
+    --spotlight-x: 50vw;
+    --spotlight-y: 30vh;
+    background: radial-gradient(
+      520px circle at var(--spotlight-x) var(--spotlight-y),
+      var(--flow-spotlight),
+      transparent 62%
+    );
+    contain: strict;
+    will-change: background;
+  }
+  .react-flow,
+  .react-flow__renderer,
+  .react-flow__pane,
+  .react-flow__viewport {
+    contain: layout paint style;
+  }
+  .react-flow__node {
+    will-change: transform;
+  }
+  .flow-pulse {
+    animation: flow-pulse 2.2s ease-out infinite;
+    will-change: transform, opacity;
+  }
 }
 
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
+  }
+}
+
+@keyframes flow-pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
   }
 }
 

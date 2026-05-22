@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { FileCode2, GitBranch, LayoutDashboard, Mail, Zap } from "lucide-react"
@@ -18,11 +17,8 @@ export function FloatingDock() {
   const pathname = usePathname()
 
   return (
-    <motion.nav
-      initial={{ y: 40, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.3 }}
-      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 gap-1 rounded-2xl border border-flow-glass p-1.5 backdrop-blur-2xl md:hidden theme-transition"
+    <nav
+      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 animate-in fade-in slide-in-from-bottom-3 gap-1 rounded-2xl border border-flow-glass p-1.5 backdrop-blur-xl duration-150 md:hidden theme-transition"
       style={{ backgroundColor: "var(--flow-dock-bg)" }}
     >
       {dock.map((item) => {
@@ -30,20 +26,19 @@ export function FloatingDock() {
         const Icon = item.icon
         return (
           <Link key={item.href} href={item.href}>
-            <motion.span
-              whileTap={{ scale: 0.9 }}
+            <span
               className={cn(
-                "flex h-11 w-11 items-center justify-center rounded-xl transition-colors",
+                "flex h-11 w-11 transform-gpu items-center justify-center rounded-xl transition-[background-color,color,transform] duration-100 active:scale-95",
                 active
                   ? "bg-gradient-to-b from-violet-500/30 to-cyan-500/20 text-flow shadow-[0_0_20px_-4px_rgba(99,102,241,0.5)]"
                   : "text-flow-muted"
               )}
             >
               <Icon className="h-5 w-5" />
-            </motion.span>
+            </span>
           </Link>
         )
       })}
-    </motion.nav>
+    </nav>
   )
 }

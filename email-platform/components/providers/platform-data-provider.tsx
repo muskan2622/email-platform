@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext, useMemo, type ReactNode } from "react"
 import {
   usePlatformData,
   type PlatformStats,
@@ -16,7 +16,11 @@ type ContextValue = {
 const PlatformDataContext = createContext<ContextValue | null>(null)
 
 export function PlatformDataProvider({ children }: { children: ReactNode }) {
-  const value = usePlatformData()
+  const { data, error, loading, refresh } = usePlatformData()
+  const value = useMemo(
+    () => ({ data, error, loading, refresh }),
+    [data, error, loading, refresh]
+  )
   return (
     <PlatformDataContext.Provider value={value}>
       {children}

@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -13,7 +12,6 @@ import {
   Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { springSmooth } from "@/lib/motion"
 
 const nav = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -27,12 +25,7 @@ export function FloatingSidebar() {
   const pathname = usePathname()
 
   return (
-    <motion.aside
-      initial={{ x: -24, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={springSmooth}
-      className="group/sidebar glass-panel fixed left-4 top-4 z-40 hidden h-[calc(100vh-2rem)] w-[72px] flex-col p-3 md:flex lg:w-[220px] lg:p-4"
-    >
+    <aside className="group/sidebar glass-panel fixed left-4 top-4 z-40 hidden h-[calc(100vh-2rem)] w-[72px] animate-in fade-in slide-in-from-left-3 flex-col p-3 duration-150 md:flex lg:w-[220px] lg:p-4">
       <div className="relative z-[1] mb-8 flex items-center gap-3 px-1">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 shadow-[0_0_24px_-4px_rgba(139,92,246,0.5)]">
           <Sparkles className="h-4 w-4 text-white" />
@@ -50,11 +43,7 @@ export function FloatingSidebar() {
           return (
             <Link key={item.href} href={item.href} className="relative">
               {active && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500/20 to-cyan-500/10 shadow-[inset_0_0_20px_rgba(99,102,241,0.15)] dark:shadow-[inset_0_0_20px_rgba(99,102,241,0.15)]"
-                  transition={springSmooth}
-                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500/20 to-cyan-500/10 shadow-[inset_0_0_20px_rgba(99,102,241,0.15)] dark:shadow-[inset_0_0_20px_rgba(99,102,241,0.15)]" />
               )}
               <span
                 className={cn(
@@ -76,14 +65,9 @@ export function FloatingSidebar() {
           <span className="hidden text-xs text-flow-muted lg:inline">All systems live</span>
         </div>
         <div className="mt-2 hidden h-1 overflow-hidden rounded-full bg-flow-glass-inset lg:block">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
-            initial={{ width: "0%" }}
-            animate={{ width: "94%" }}
-            transition={{ duration: 1.2, delay: 0.5 }}
-          />
+          <div className="h-full w-[94%] rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400" />
         </div>
       </div>
-    </motion.aside>
+    </aside>
   )
 }

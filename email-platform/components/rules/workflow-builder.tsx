@@ -50,7 +50,7 @@ import {
   X,
   Zap,
 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { TopNavbar } from "@/components/layout/top-navbar"
 import { GlassCard } from "@/components/motion/glass-card"
 import { usePlatformDataContext } from "@/components/providers/platform-data-provider"
@@ -209,13 +209,11 @@ function WorkflowNodeIcon({ kind }: { kind: WorkflowNodeKind }) {
   }
 }
 
-function WorkflowNode({ data, selected }: NodeProps<WorkflowGraphNode>) {
+const WorkflowNode = memo(function WorkflowNode({ data, selected }: NodeProps<WorkflowGraphNode>) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+    <div
       className={cn(
-        "min-w-[220px] rounded-2xl border p-4 shadow-[0_0_45px_-18px] backdrop-blur-xl transition",
+        "min-w-[220px] rounded-2xl border p-4 shadow-[0_0_45px_-18px] backdrop-blur-md transition-[border-color,box-shadow,transform] duration-100",
         nodeTone(data.kind),
         selected && "ring-2 ring-cyan-300/50"
       )}
@@ -240,11 +238,12 @@ function WorkflowNode({ data, selected }: NodeProps<WorkflowGraphNode>) {
         <span className="font-mono text-cyan-200">{data.metric}</span>
       </div>
       <Handle type="source" position={Position.Right} className="!h-3 !w-3 !border-cyan-200 !bg-cyan-300" />
-    </motion.div>
+    </div>
   )
-}
+})
 
 const nodeTypes = { workflow: WorkflowNode }
+const graphEdgeOptions = { animated: true }
 
 function buildWorkflow(trigger: {
   name: string
@@ -419,16 +418,16 @@ function WorkflowCanvas({
   const [fitOpen, setFitOpen] = useState(false)
   const selectedNode = nodes.find((node) => node.id === selectedNodeId) ?? nodes[0]
 
-  const fitCanvas = () => {
+  const fitCanvas = useCallback(() => {
     void flowInstance?.fitView({ padding: 0.18, duration: 450 })
-  }
+  }, [flowInstance])
 
-  const openFitModal = () => {
+  const openFitModal = useCallback(() => {
     fitCanvas()
     setFitOpen(true)
-  }
+  }, [fitCanvas])
 
-  const onConnect = (connection: Connection) => {
+  const onConnect = useCallback((connection: Connection) => {
     setEdges((current) =>
       addEdge(
         {
@@ -440,7 +439,11 @@ function WorkflowCanvas({
         current
       )
     )
-  }
+  }, [setEdges])
+
+  const selectNode = useCallback((_: unknown, node: WorkflowGraphNode) => {
+    setSelectedNodeId(node.id)
+  }, [])
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
@@ -467,12 +470,12 @@ function WorkflowCanvas({
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onNodeClick={selectNode}
             onInit={setFlowInstance}
             fitView
             minZoom={0.35}
             maxZoom={1.35}
-            defaultEdgeOptions={{ animated: true }}
+            defaultEdgeOptions={graphEdgeOptions}
             proOptions={{ hideAttribution: true }}
           >
             <Background color="rgba(255,255,255,0.08)" gap={24} />
@@ -523,11 +526,11 @@ function WorkflowCanvas({
                     nodes={nodes}
                     edges={edges}
                     nodeTypes={nodeTypes}
-                    onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+                    onNodeClick={selectNode}
                     fitView
                     minZoom={0.3}
                     maxZoom={1.5}
-                    defaultEdgeOptions={{ animated: true }}
+                    defaultEdgeOptions={graphEdgeOptions}
                     nodesDraggable={false}
                     nodesConnectable={false}
                     elementsSelectable
