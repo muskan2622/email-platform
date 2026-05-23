@@ -49,9 +49,28 @@ export type TriggerWithTemplate = Trigger & {
   templates: { id: string; slug: string; name: string; status: string } | null
 }
 
+export type AutomationWithTemplate = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  status: string
+  trigger_event: string
+  conditions: unknown
+  template_id: string | null
+  delivery_rules: Record<string, unknown>
+  trigger_id: string | null
+  audience_estimate: number | null
+  activated_at: string | null
+  created_at: string
+  updated_at: string
+  templates: { id: string; name: string; slug: string; status: string } | null
+}
+
 export type PlatformStats = {
   templates: Template[]
   triggers: TriggerWithTemplate[]
+  automations: AutomationWithTemplate[]
   events: EventRecord[]
   sendLog: SendLogRow[]
   eventTypeCategories: EventTypeCategoryRow[]

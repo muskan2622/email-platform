@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { X } from "lucide-react"
 import { ActivationModal } from "@/components/automation-builder/modals/activation-modal"
@@ -85,9 +86,11 @@ export function AutomationWizard() {
     redo,
   } = useAutomationWizardStore()
 
+  const router = useRouter()
   const { refresh } = usePlatformDataContext()
   const [activationOpen, setActivationOpen] = useState(false)
   const [activationSuccess, setActivationSuccess] = useState(false)
+  const [activatedAutomationId, setActivatedAutomationId] = useState<string | null>(null)
   const autosaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const StepComponent = stepComponents[step]
@@ -179,12 +182,13 @@ export function AutomationWizard() {
 
     setActivating(true)
     try {
-      await apiPost("/api/automations", {
+      const saved = await apiPost<{ id: string }>("/api/automations", {
         id: draft.id ?? undefined,
         activate: true,
         ...result.data,
         audience_estimate: useAutomationWizardStore.getState().audienceEstimate,
       })
+      setActivatedAutomationId(saved.id)
       setActivationSuccess(true)
       void refresh()
     } catch (e) {
@@ -198,10 +202,25 @@ export function AutomationWizard() {
   }
 
   const handleCloseSuccess = () => {
+    const automationId = activatedAutomationId ?? draft.id
     setActivationOpen(false)
     setActivationSuccess(false)
     resetWizard()
     closeWizard()
+    if (automationId) {
+      router.push(`/rules?automation=${automationId}`)
+    }
+  }
+
+  const handleOpenEditor = () => {
+    const automationId = activatedAutomationId ?? draft.id
+    setActivationOpen(false)
+    setActivationSuccess(false)
+    resetWizard()
+    closeWizard()
+    if (automationId) {
+      router.push(`/rules?automation=${automationId}`)
+    }
   }
 
   return (
@@ -302,6 +321,7 @@ export function AutomationWizard() {
             success={activationSuccess}
             automationName={draft.name || "Automation"}
             onConfirm={() => void handleActivate()}
+            onOpenEditor={handleOpenEditor}
             onClose={() =>
               activationSuccess ? handleCloseSuccess() : setActivationOpen(false)
             }

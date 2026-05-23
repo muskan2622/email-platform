@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { EventRecord, Template } from "@/lib/types/database"
 import type {
+  AutomationWithTemplate,
   PlatformStats,
   SendLogRow,
   TriggerWithTemplate,
@@ -30,6 +31,7 @@ export async function fetchPlatformSnapshot(
   const [
     templatesRes,
     triggersRes,
+    automationsRes,
     eventsRes,
     sendLogRes,
     categoriesRes,
@@ -44,6 +46,10 @@ export async function fetchPlatformSnapshot(
       .from("triggers")
       .select("*, templates(id, slug, name, status)")
       .order("priority", { ascending: true }),
+    supabase
+      .from("automations")
+      .select("*, templates(id, slug, name, status)")
+      .order("updated_at", { ascending: false }),
     supabase
       .from("events")
       .select(
@@ -74,9 +80,16 @@ export async function fetchPlatformSnapshot(
       .order("sort_order", { ascending: true }),
   ])
 
+  const automationsError = automationsRes.error
+  const automationsMissing =
+    automationsError?.message.includes("does not exist") ||
+    automationsError?.message.includes("schema cache") ||
+    automationsError?.message.includes("Could not find the table")
+
   const firstError =
     templatesRes.error ??
     triggersRes.error ??
+    (automationsMissing ? null : automationsError) ??
     eventsRes.error ??
     sendLogRes.error ??
     categoriesRes.error ??
@@ -86,6 +99,7 @@ export async function fetchPlatformSnapshot(
 
   const templates = (templatesRes.data ?? []) as Template[]
   const triggers = (triggersRes.data ?? []) as TriggerWithTemplate[]
+  const automations = (automationsMissing ? [] : (automationsRes.data ?? [])) as AutomationWithTemplate[]
   const events = (eventsRes.data ?? []) as EventRecord[]
   const sendLog = (sendLogRes.data ?? []) as unknown as SendLogRow[]
 
@@ -99,6 +113,7 @@ export async function fetchPlatformSnapshot(
   return {
     templates,
     triggers,
+    automations,
     events,
     sendLog,
     eventTypeCategories: categoriesRes.data ?? [],

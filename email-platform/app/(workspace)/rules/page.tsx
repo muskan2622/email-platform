@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic"
+import { Suspense } from "react"
 import { LoadingState } from "@/components/ui/loading-state"
 
 const WorkflowBuilder = dynamic(
@@ -9,5 +10,9 @@ const WorkflowBuilder = dynamic(
 )
 
 export default function RulesPage() {
-  return <WorkflowBuilder />
+  return (
+    <Suspense fallback={<LoadingState rows={6} />}>
+      <WorkflowBuilder />
+    </Suspense>
+  )
 }

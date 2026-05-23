@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion"
 import { CheckCircle2, Loader2, Zap } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export function ActivationModal({
   open,
@@ -10,6 +11,7 @@ export function ActivationModal({
   automationName,
   onConfirm,
   onClose,
+  onOpenEditor,
 }: {
   open: boolean
   loading: boolean
@@ -17,6 +19,7 @@ export function ActivationModal({
   automationName: string
   onConfirm: () => void
   onClose: () => void
+  onOpenEditor?: () => void
 }) {
   return (
     <AnimatePresence>
@@ -42,13 +45,25 @@ export function ActivationModal({
                 <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-400" />
                 <h2 className="mt-4 text-lg font-semibold text-flow">Automation live</h2>
                 <p className="mt-2 text-sm text-flow-muted">
-                  <strong className="text-flow">{automationName}</strong> is now active and
-                  listening for events.
+                  <strong className="text-flow">{automationName}</strong> is now active. Open the
+                  workflow editor to run tests and inspect execution.
                 </p>
+                {onOpenEditor ? (
+                  <button
+                    type="button"
+                    onClick={onOpenEditor}
+                    className="mt-6 w-full rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 py-2.5 text-sm font-medium text-white hover:opacity-90"
+                  >
+                    Open workflow editor
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-6 w-full rounded-xl bg-violet-600 py-2.5 text-sm font-medium text-white hover:bg-violet-500"
+                  className={cn(
+                    "w-full rounded-xl border border-flow-glass py-2.5 text-sm text-flow-muted hover:text-flow",
+                    onOpenEditor ? "mt-2" : "mt-6"
+                  )}
                 >
                   Done
                 </button>
