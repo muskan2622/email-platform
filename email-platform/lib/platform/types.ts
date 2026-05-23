@@ -40,6 +40,7 @@ export type SendLogRow = {
   skip_reason: string | null
   error: string | null
   created_at: string
+  trigger_id: string | null
   triggers: { name: string } | null
   templates: { slug: string; name: string } | null
   end_users: { email: string; external_id: string } | null

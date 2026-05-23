@@ -73,6 +73,7 @@ export function AutomationWizard() {
     setStep,
     nextStep,
     prevStep,
+    validationErrors,
     setValidationErrors,
     setSaving,
     setActivating,
@@ -149,15 +150,13 @@ export function AutomationWizard() {
       setValidationErrors(errors)
       return
     }
-    setValidationErrors((prev) => {
-      const next = { ...prev }
-      delete next.template_id
-      delete next.trigger_event
-      delete next.conditions
-      delete next.delivery_rules
-      delete next.form
-      return next
-    })
+    const next = { ...validationErrors }
+    delete next.template_id
+    delete next.trigger_event
+    delete next.conditions
+    delete next.delivery_rules
+    delete next.form
+    setValidationErrors(next)
     if (step < 5) nextStep()
   }
 
