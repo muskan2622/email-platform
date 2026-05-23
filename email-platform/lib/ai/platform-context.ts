@@ -23,6 +23,17 @@ export function buildPlatformContextSummary(data: PlatformStats | null): string 
     subject: t.subject,
   }))
 
+  const lastSend = data.sendLog[0]
+    ? {
+        status: data.sendLog[0].status,
+        recipient: data.sendLog[0].end_users?.email,
+        subject: data.sendLog[0].rendered_subject,
+        trigger: data.sendLog[0].triggers?.name,
+        at: data.sendLog[0].created_at,
+        error: data.sendLog[0].error,
+      }
+    : null
+
   return JSON.stringify(
     {
       metrics: {
@@ -33,7 +44,9 @@ export function buildPlatformContextSummary(data: PlatformStats | null): string 
         events_loaded: data.eventsCount,
         active_triggers: data.activeTriggers,
         templates: data.templates.length,
+        automations: data.automations.length,
       },
+      last_send: lastSend,
       recent_sends: recentSends,
       recent_events: recentEvents,
       templates: topTemplates,
@@ -42,6 +55,11 @@ export function buildPlatformContextSummary(data: PlatformStats | null): string 
         event_type: t.event_type,
         enabled: t.enabled,
         template: t.templates?.name,
+      })),
+      automations: data.automations.slice(0, 6).map((a) => ({
+        name: a.name,
+        status: a.status,
+        event: a.trigger_event,
       })),
     },
     null,

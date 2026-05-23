@@ -73,12 +73,12 @@ export const AI_TABS: AiTabId[] = [
 ]
 
 export const QUICK_ACTIONS = [
+  "Who got the last email?",
+  "What is this software about?",
+  "Campaign status overview",
   "Rewrite this professionally",
   "Generate 10 subject lines",
-  "Make this more urgent",
-  "Improve conversions",
-  "Shorten this email",
-  "Make this friendlier",
+  "Any failed sends?",
 ] as const
 
 export const SLASH_COMMANDS = [

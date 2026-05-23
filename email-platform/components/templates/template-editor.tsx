@@ -510,7 +510,7 @@ export function TemplateEditor() {
                   ))}
                 </div>
 
-                <textarea value={activeBody} onChange={(event) => { setDraftTemplateId(selected?.id ?? null); setSubject(activeSubject); setBody(event.target.value) }} rows={15} className={cn("w-full resize-none rounded-lg border border-flow-glass bg-flow-glass-inset px-4 py-3 text-sm leading-relaxed text-flow-secondary outline-none ring-violet-500/30 focus:ring-2", editorMode === "html" ? "font-mono" : "font-sans")} />
+                <textarea value={activeBody} onChange={(event) => { setDraftTemplateId(selected?.id ?? null); setSubject(activeSubject); setBody(event.target.value) }} rows={15} className="w-full resize-none rounded-lg border border-flow-glass bg-flow-glass-inset px-4 py-3 font-mono text-sm leading-relaxed text-flow-secondary outline-none ring-violet-500/30 focus:ring-2" />
 
                 <div className="mt-4 grid gap-3 lg:grid-cols-2">
                   <div className="rounded-lg border border-flow-glass-faint bg-flow-glass-subtle p-3">

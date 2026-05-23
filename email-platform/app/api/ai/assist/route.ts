@@ -7,6 +7,7 @@ const ACTIONS: AiAssistAction[] = [
   "rewrite_tone",
   "subject_lines",
   "improve",
+  "answer",
 ]
 
 export async function POST(request: NextRequest) {

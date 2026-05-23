@@ -5,6 +5,7 @@ export type AiAssistAction =
   | "rewrite_tone"
   | "subject_lines"
   | "improve"
+  | "answer"
 
 export interface AiAssistInput {
   action: AiAssistAction
@@ -15,10 +16,20 @@ export interface AiAssistInput {
   platform_context?: string
 }
 
-const SYSTEM = `You are Pulse AI, an email campaign copilot for non-technical marketers.
+const COPY_SYSTEM = `You are Pulse AI, an email campaign copilot for Pulsemail (AI email automation).
 You may receive live platform metrics (sends, events, triggers, templates) — use them when relevant.
 Return concise, professional copy. Use {{placeholder}} syntax for dynamic fields when appropriate.
 Respond in JSON: { "subject": string | null, "body_html": string, "suggestions": string[] }`
+
+const ANSWER_SYSTEM = `You are Pulse AI, the in-app assistant for Pulsemail — an event-driven email automation platform (templates, triggers, automations, send log, Pulse AI).
+
+The user is asking a question (not requesting email copy edits). Answer accurately using ONLY the platform_context JSON when the question is about their account/data. If data is missing, say so clearly.
+
+For product questions: Pulsemail connects app events to automated emails via triggers/automations and templates; marketers use the dashboard, template editor, rules, and send log.
+
+Respond in the user's language when they write in Hindi/Hinglish. Be concise, use markdown lists/tables when helpful.
+
+Respond in JSON: { "subject": null, "body_html": string (markdown answer), "suggestions": string[] (2-4 follow-up questions) }`
 
 function formatOpenAiError(err: unknown): string {
   if (err && typeof err === "object") {
@@ -45,16 +56,18 @@ export async function runAiAssist(input: AiAssistInput) {
 
   const client = new OpenAI({ apiKey })
   const userPrompt = JSON.stringify(input)
+  const system = input.action === "answer" ? ANSWER_SYSTEM : COPY_SYSTEM
+  const temperature = input.action === "answer" ? 0.35 : 0.7
 
   try {
     const completion = await client.chat.completions.create({
       model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM },
+        { role: "system", content: system },
         { role: "user", content: userPrompt },
       ],
-      temperature: 0.7,
+      temperature,
     })
 
     const raw = completion.choices[0]?.message?.content

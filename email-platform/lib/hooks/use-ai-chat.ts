@@ -1,18 +1,16 @@
 "use client"
 
 import { useCallback } from "react"
-import {
-  buildLocalDataResponse,
-  isDataQuery,
-  isPlatformSummarizeQuery,
-} from "@/lib/ai/local-assist"
+import { buildProductOverviewMarkdown } from "@/lib/ai/product-knowledge"
+import { buildLocalDataResponse, shouldUseLocalAssist } from "@/lib/ai/local-assist"
+import { isEmailCopyRequest } from "@/lib/ai/query-intent"
 import { buildPlatformContextSummary } from "@/lib/ai/platform-context"
 import { apiPost } from "@/lib/api/client"
 import type { PlatformStats } from "@/lib/hooks/use-platform-data"
 import type { AiTabId } from "@/lib/stores/ai-assistant-store"
 import { useAiAssistantStore } from "@/lib/stores/ai-assistant-store"
 
-type AiAction = "draft" | "rewrite_tone" | "subject_lines" | "improve"
+type AiAction = "draft" | "rewrite_tone" | "subject_lines" | "improve" | "answer"
 
 function tabToAction(tab: AiTabId, prompt: string): AiAction {
   const lower = prompt.toLowerCase()
@@ -72,11 +70,9 @@ export function useAiChat(platformData?: PlatformStats | null) {
 
       try {
         const hasEmailBody = Boolean(emailContext.body?.trim() || body.trim())
-        const useLocal =
-          isDataQuery(input) ||
-          isPlatformSummarizeQuery(input, hasEmailBody) ||
-          (input.trim().toLowerCase() === "summarize" && body.length < 80) ||
-          (activeTab === "summarize" && !hasEmailBody)
+        const useLocal = shouldUseLocalAssist(input, hasEmailBody, activeTab)
+        const copyTask = isEmailCopyRequest(input, hasEmailBody, activeTab)
+        const apiAction: AiAction = copyTask ? action : "answer"
 
         let result: {
           subject: string | null
@@ -91,13 +87,19 @@ export function useAiChat(platformData?: PlatformStats | null) {
             body_html: local?.body_html ?? "No data available.",
             suggestions: local?.suggestions ?? [],
           }
+        } else if (!copyTask && !platformData) {
+          result = {
+            subject: null,
+            body_html: buildProductOverviewMarkdown(),
+            suggestions: ["Connect Supabase for live data", "Rewrite this professionally"],
+          }
         } else {
           result = await apiPost<{
             subject: string | null
             body_html: string
             suggestions: string[]
           }>("/api/ai/assist", {
-            action,
+            action: apiAction,
             subject,
             body,
             tone: slash?.tone,
@@ -109,7 +111,10 @@ export function useAiChat(platformData?: PlatformStats | null) {
         const parts: string[] = []
         if (result.subject) parts.push(`**Subject**\n${result.subject}`)
         const plainBody = result.body_html?.replace(/<[^>]+>/g, " ").trim()
-        if (plainBody) parts.push(`**Copy**\n${plainBody}`)
+        const isQaResponse = useLocal || apiAction === "answer"
+        if (plainBody) {
+          parts.push(isQaResponse ? plainBody : `**Copy**\n${plainBody}`)
+        }
         if (result.suggestions?.length) {
           parts.push(
             `**Suggestions**\n${result.suggestions.map((s) => `• ${s}`).join("\n")}`
@@ -123,7 +128,7 @@ export function useAiChat(platformData?: PlatformStats | null) {
         })
         store.removeStreamingFlag(assistantId)
 
-        const applyText = plainBody || result.subject || ""
+        const applyText = copyTask ? plainBody || result.subject || "" : ""
         if (applyText) {
           store.setPendingApply(applyText)
           if (emailContext.selectedText && plainBody) {

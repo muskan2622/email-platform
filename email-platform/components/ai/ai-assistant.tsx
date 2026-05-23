@@ -36,7 +36,6 @@ import {
   SLASH_COMMANDS,
   getTabLabel,
   useAiAssistantStore,
-  type AiTabId,
 } from "@/lib/stores/ai-assistant-store"
 
 const SPRING = { type: "spring" as const, stiffness: 420, damping: 32, mass: 0.85 }
@@ -645,7 +644,9 @@ function AiChatPanel() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-flow">Pulse AI</p>
-                <p className="truncate text-[11px] text-flow-faint">Campaign copilot</p>
+                <p className="truncate text-[11px] text-flow-faint">
+                  Ask about your data or email copy
+                </p>
               </div>
               <Button
                 variant="ghost"
@@ -734,7 +735,7 @@ function AiChatPanel() {
                         transition={{ delay: 0.3 }}
                         className="max-w-xs text-sm text-flow-secondary"
                       >
-                        I&apos;m Pulse AI — your campaign copilot.
+                        I&apos;m Pulse AI — ask who got the last email, what Pulsemail does, or improve copy.
                       </motion.p>
                       <div className="flex flex-wrap justify-center gap-2">
                         {QUICK_ACTIONS.slice(0, 4).map((action, i) => (
@@ -759,9 +760,10 @@ function AiChatPanel() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-flow">How can I help?</p>
-                        <p className="mt-1 max-w-[260px] text-xs text-flow-muted">
-                          Ask anything about copy, subjects, CTAs, or paste email content.
-                          Press <kbd className="rounded border border-flow-glass-faint px-1">⌘K</kbd> anytime.
+                        <p className="mt-1 max-w-[280px] text-xs text-flow-muted">
+                          Try &quot;last mail &quot;, campaign status, or what this software does.
+                          In the template editor, select text to rewrite.{" "}
+                          <kbd className="rounded border border-flow-glass-faint px-1">⌘K</kbd>
                         </p>
                       </div>
                       <div className="relative z-10 flex max-w-sm flex-wrap justify-center gap-2">
@@ -811,7 +813,7 @@ function AiChatPanel() {
                         }
                       }}
                       rows={2}
-                      placeholder="Message Pulse…  type / for commands"
+                      placeholder="Ask anything — last email, status, copy…  / for commands"
                       className="max-h-28 min-h-[44px] flex-1 resize-none bg-transparent text-sm text-flow outline-none placeholder:text-flow-faint"
                     />
                     <Button
