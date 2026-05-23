@@ -3,8 +3,8 @@
 import { useEffect } from "react"
 import { motion } from "framer-motion"
 import { Loader2, Sparkles, Users } from "lucide-react"
-import { findTrigger } from "@/lib/automation/trigger-catalog"
 import { humanizeConditionGroup } from "@/lib/automation/humanize-conditions"
+import { useAutomationCatalog } from "@/lib/hooks/use-automation-catalog"
 import { WizardInput, WizardLabel } from "@/components/automation-builder/shared/wizard-input"
 import { usePlatformDataContext } from "@/components/providers/platform-data-provider"
 import { useAutomationWizardStore } from "@/lib/stores/automation-wizard-store"
@@ -29,9 +29,10 @@ export function ReviewStep() {
     estimateLoading,
   } = useAutomationWizardStore()
 
+  const { findTrigger, conditionFields } = useAutomationCatalog()
   const trigger = findTrigger(draft.trigger_event)
   const template = data?.templates.find((t) => t.id === draft.template_id)
-  const conditionLines = humanizeConditionGroup(draft.conditions)
+  const conditionLines = humanizeConditionGroup(draft.conditions, conditionFields)
   const rules = draft.delivery_rules
 
   useEffect(() => {

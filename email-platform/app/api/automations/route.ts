@@ -4,6 +4,7 @@ import { persistAutomation } from "@/lib/automation/persist-automation"
 import { parseConditionGroup } from "@/lib/engine/conditions"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
+  automationDraftSchema,
   automationWizardSchema,
   defaultWizardValues,
 } from "@/lib/validators/automation-wizard"
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
   const activate = body.activate === true
   const draft = body.draft === true
 
-  const parsed = automationWizardSchema.safeParse({
+  const schema = draft ? automationDraftSchema : automationWizardSchema
+  const parsed = schema.safeParse({
     ...defaultWizardValues(),
     ...body,
     conditions: parseConditionGroup(body.conditions ?? defaultWizardValues().conditions),
@@ -64,17 +66,30 @@ export async function POST(request: NextRequest) {
 
   try {
     const supabase = createAdminClient()
-    const automation = await persistAutomation(supabase, {
-      ...parsed.data,
-      id: typeof body.id === "string" ? body.id : undefined,
-    }, { activate })
+    const automation = await persistAutomation(
+      supabase,
+      {
+        ...parsed.data,
+        name:
+          parsed.data.name?.trim() ||
+          (typeof body.name === "string" ? body.name : "") ||
+          `Draft — ${parsed.data.trigger_event}`,
+        template_id: parsed.data.template_id ?? "",
+        id: typeof body.id === "string" ? body.id : undefined,
+      },
+      { activate }
+    )
 
     return jsonOk(automation, activate ? 201 : 200)
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to save automation"
-    if (message.includes("does not exist")) {
+    if (
+      message.includes("does not exist") ||
+      message.includes("schema cache") ||
+      message.includes("Could not find the table")
+    ) {
       return jsonError(
-        "Automations tables not found. Run supabase migration 20250523000000_automation_builder.sql",
+        "Automations tables not found. Run supabase/migrations/20250524000003_ensure_automation_builder.sql in the Supabase SQL editor.",
         503
       )
     }

@@ -269,7 +269,8 @@ export function TemplateEditor() {
         provider,
         payload: mockPayload,
       })
-      setToast(`Test queued through ${provider.toUpperCase()} with live status tracking`)
+      await refresh()
+      setToast(`Test sent via ${provider.toUpperCase()} — check Events and Email Logs`)
     } catch (err) {
       setToast(err instanceof Error ? err.message : "Test send failed")
     } finally {
@@ -364,8 +365,8 @@ export function TemplateEditor() {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(360px,0.9fr)_minmax(520px,1.25fr)_minmax(360px,0.95fr)]">
-            <section className="space-y-4">
-              <GlassCard className="p-4">
+            <section className="flex flex-col gap-4">
+              <GlassCard className="shrink-0 p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="relative min-w-0 flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-flow-faint" />
@@ -412,7 +413,7 @@ export function TemplateEditor() {
                 </div>
               </GlassCard>
 
-              <GlassCard className="p-4">
+              <GlassCard className="shrink-0 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-flow">Recently Edited</h2>
                   <Clock3 className="h-4 w-4 text-flow-faint" />
@@ -427,6 +428,13 @@ export function TemplateEditor() {
                 </div>
               </GlassCard>
 
+              <div className="min-h-0 shrink">
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <p className="text-xs text-flow-faint">
+                    {filteredTemplates.length} template{filteredTemplates.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="max-h-[calc(100dvh-28rem)] min-h-[12rem] overflow-y-auto overscroll-contain pr-1 ai-panel-scroll">
               {viewMode === "grid" ? (
                 <div className="grid gap-3">
                   {filteredTemplates.map((template) => (
@@ -470,6 +478,8 @@ export function TemplateEditor() {
                   ))}
                 </GlassCard>
               )}
+                </div>
+              </div>
             </section>
 
             <section className="space-y-4">

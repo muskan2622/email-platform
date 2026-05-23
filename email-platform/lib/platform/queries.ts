@@ -27,7 +27,15 @@ export async function fetchPlatformSnapshot(
   const eventsLimit = Math.min(options.eventsLimit ?? 50, 100)
   const sendLogLimit = Math.min(options.sendLogLimit ?? 100, 100)
 
-  const [templatesRes, triggersRes, eventsRes, sendLogRes] = await Promise.all([
+  const [
+    templatesRes,
+    triggersRes,
+    eventsRes,
+    sendLogRes,
+    categoriesRes,
+    eventTypesRes,
+    conditionFieldsRes,
+  ] = await Promise.all([
     supabase
       .from("templates")
       .select(TEMPLATE_COLUMNS)
@@ -48,13 +56,32 @@ export async function fetchPlatformSnapshot(
       .select(SEND_LOG_COLUMNS)
       .order("created_at", { ascending: false })
       .limit(sendLogLimit),
+    supabase
+      .from("event_type_categories")
+      .select("id, label, sort_order")
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("event_types")
+      .select(
+        "id, event, label, description, category_id, icon, realtime, sample_payload, enabled, sort_order"
+      )
+      .eq("enabled", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("condition_field_definitions")
+      .select("id, field, label, description, value_type, operators, options, enabled, sort_order")
+      .eq("enabled", true)
+      .order("sort_order", { ascending: true }),
   ])
 
   const firstError =
     templatesRes.error ??
     triggersRes.error ??
     eventsRes.error ??
-    sendLogRes.error
+    sendLogRes.error ??
+    categoriesRes.error ??
+    eventTypesRes.error ??
+    conditionFieldsRes.error
   if (firstError) throw new Error(firstError.message)
 
   const templates = (templatesRes.data ?? []) as Template[]
@@ -74,6 +101,9 @@ export async function fetchPlatformSnapshot(
     triggers,
     events,
     sendLog,
+    eventTypeCategories: categoriesRes.data ?? [],
+    eventTypes: eventTypesRes.data ?? [],
+    conditionFields: conditionFieldsRes.data ?? [],
     sentCount,
     failedCount,
     skippedCount,

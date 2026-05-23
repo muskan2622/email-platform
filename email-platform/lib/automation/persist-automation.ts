@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { parseConditionGroup } from "@/lib/engine/conditions"
 import type { ConditionGroup, ConditionRule } from "@/lib/types/database"
 import type { AutomationWizardFormValues } from "@/lib/validators/automation-wizard"
+import { hasNormalizedAutomationTables } from "@/lib/automation/automation-table-support"
+import { fetchAutomationCatalog } from "@/lib/automation/fetch-catalog"
 import { humanizeRule } from "@/lib/automation/humanize-conditions"
 
 function slugify(name: string) {
@@ -20,6 +22,7 @@ async function syncNormalizedConditions(
   supabase: SupabaseClient,
   automationId: string,
   group: ConditionGroup,
+  conditionFields: Awaited<ReturnType<typeof fetchAutomationCatalog>>["conditionFields"],
   parentGroupId: string | null = null,
   sortBase = 0
 ) {
@@ -39,14 +42,21 @@ async function syncNormalizedConditions(
   let sort = 0
   for (const rule of group.rules) {
     if (isGroup(rule)) {
-      await syncNormalizedConditions(supabase, automationId, rule, groupRow.id, sort++)
+      await syncNormalizedConditions(
+        supabase,
+        automationId,
+        rule,
+        conditionFields,
+        groupRow.id,
+        sort++
+      )
     } else {
       const { error } = await supabase.from("automation_conditions").insert({
         group_id: groupRow.id,
         field_path: rule.field,
         operator: rule.op,
         value: rule.value ?? null,
-        human_label: humanizeRule(rule),
+        human_label: humanizeRule(rule, conditionFields),
         sort_order: sort++,
       })
       if (error) throw new Error(error.message)
@@ -98,20 +108,37 @@ export async function persistAutomation(
 
   if (!automationId) throw new Error("Failed to resolve automation id")
 
-  await supabase.from("automation_condition_groups").delete().eq("automation_id", automationId)
-  await supabase.from("automation_actions").delete().eq("automation_id", automationId)
+  const normalizedTables = await hasNormalizedAutomationTables(supabase)
 
-  if (conditions.rules.length > 0) {
-    await syncNormalizedConditions(supabase, automationId, conditions)
+  if (normalizedTables) {
+    await supabase
+      .from("automation_condition_groups")
+      .delete()
+      .eq("automation_id", automationId)
+    await supabase.from("automation_actions").delete().eq("automation_id", automationId)
+
+    const catalog = await fetchAutomationCatalog(supabase)
+
+    if (conditions.rules.length > 0) {
+      await syncNormalizedConditions(
+        supabase,
+        automationId,
+        conditions,
+        catalog.conditionFields
+      )
+    }
+
+    if (values.template_id) {
+      const { error: actionError } = await supabase.from("automation_actions").insert({
+        automation_id: automationId,
+        action_type: "send_email",
+        template_id: values.template_id,
+        config: values.delivery_rules,
+        sort_order: 0,
+      })
+      if (actionError) throw new Error(actionError.message)
+    }
   }
-
-  await supabase.from("automation_actions").insert({
-    automation_id: automationId,
-    action_type: "send_email",
-    template_id: values.template_id,
-    config: values.delivery_rules,
-    sort_order: 0,
-  })
 
   if (values.template_id) {
     const sendOnce = values.delivery_rules.mode === "once_per_user"

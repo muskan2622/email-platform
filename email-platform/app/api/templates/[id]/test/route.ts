@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server"
 import { jsonError, jsonOk } from "@/lib/api/response"
+import { logTemplateTestSend } from "@/lib/email/log-template-test"
 import { buildRenderContext, renderEmail } from "@/lib/email/render"
 import { sendEmail, type EmailProviderId } from "@/lib/email/send"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -47,18 +48,56 @@ export async function POST(request: NextRequest, { params }: Params) {
     context
   )
 
+  const renderedSubject = `[TEST] ${rendered.subject}`
+
   try {
     const sent = await sendEmail({
       to,
-      subject: `[TEST] ${rendered.subject}`,
+      subject: renderedSubject,
       html: rendered.html,
       text: rendered.text,
       provider,
       idempotencyKey: `test:${id}:${to}`,
     })
-    return jsonOk({ message_id: sent.id, provider: sent.provider, status: sent.status, rendered })
+
+    let logged: { event_id: string; send_log_id: string } | null = null
+    try {
+      logged = await logTemplateTestSend({
+        templateId: id,
+        to,
+        provider: sent.provider,
+        renderedSubject,
+        providerMessageId: sent.id,
+        status: "sent",
+      })
+    } catch {
+      // Email delivered; logging failure should not block the test response.
+    }
+
+    return jsonOk({
+      message_id: sent.id,
+      provider: sent.provider,
+      status: sent.status,
+      rendered,
+      event_id: logged?.event_id,
+      send_log_id: logged?.send_log_id,
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Send failed"
+
+    try {
+      await logTemplateTestSend({
+        templateId: id,
+        to,
+        provider,
+        renderedSubject,
+        status: "failed",
+        error: message,
+      })
+    } catch {
+      // Provider failed; still return the send error to the client.
+    }
+
     return jsonError(message, 502)
   }
 }

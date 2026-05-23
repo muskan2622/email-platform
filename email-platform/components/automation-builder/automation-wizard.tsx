@@ -112,7 +112,10 @@ export function AutomationWizard() {
         if (!silent) void refresh()
       } catch {
         if (!silent) {
-          setValidationErrors({ save: "Could not save draft. Run the automations migration if tables are missing." })
+          setValidationErrors({
+            save:
+              "Could not save draft. Run 20250524000003_ensure_automation_builder.sql in Supabase if tables are missing.",
+          })
         }
       } finally {
         setSaving(false)
@@ -143,7 +146,15 @@ export function AutomationWizard() {
       setValidationErrors(errors)
       return
     }
-    setValidationErrors({})
+    setValidationErrors((prev) => {
+      const next = { ...prev }
+      delete next.template_id
+      delete next.trigger_event
+      delete next.conditions
+      delete next.delivery_rules
+      delete next.form
+      return next
+    })
     if (step < 5) nextStep()
   }
 

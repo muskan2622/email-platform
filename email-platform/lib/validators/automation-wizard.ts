@@ -29,6 +29,21 @@ export const deliveryRulesSchema = z.object({
   send_immediately: z.boolean(),
 })
 
+const optionalTemplateId = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : v),
+  z.string().uuid("Select an email template").optional()
+)
+
+export const automationDraftSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  trigger_event: z.string().min(1, "Select a trigger event"),
+  conditions: conditionGroupSchema,
+  template_id: optionalTemplateId,
+  delivery_rules: deliveryRulesSchema,
+  status: z.enum(["draft", "active", "paused", "archived"]).default("draft"),
+})
+
 export const automationWizardSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
@@ -40,6 +55,7 @@ export const automationWizardSchema = z.object({
 })
 
 export type AutomationWizardFormValues = z.infer<typeof automationWizardSchema>
+export type AutomationDraftFormValues = z.infer<typeof automationDraftSchema>
 
 export const triggerStepSchema = automationWizardSchema.pick({ trigger_event: true })
 export const conditionsStepSchema = automationWizardSchema.pick({ conditions: true })

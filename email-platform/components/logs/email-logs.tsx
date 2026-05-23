@@ -101,7 +101,10 @@ export function EmailLogs() {
                         {row.rendered_subject ?? row.templates?.name ?? "—"}
                       </td>
                       <td className="px-5 py-4 text-flow-muted">
-                        {row.triggers?.name ?? "—"}
+                        {row.triggers?.name ??
+                          (row.skip_reason === "manual_test" || !row.trigger_id
+                            ? "Template test"
+                            : "—")}
                       </td>
                       <td className="px-5 py-4">
                         <span

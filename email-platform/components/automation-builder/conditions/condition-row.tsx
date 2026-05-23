@@ -2,12 +2,9 @@
 
 import { motion } from "framer-motion"
 import { Trash2 } from "lucide-react"
-import {
-  CONDITION_FIELDS,
-  getFieldDefinition,
-  OPERATOR_LABELS,
-} from "@/lib/automation/field-definitions"
+import { OPERATOR_LABELS } from "@/lib/automation/field-definitions"
 import { humanizeRule } from "@/lib/automation/humanize-conditions"
+import { useAutomationCatalog } from "@/lib/hooks/use-automation-catalog"
 import type { ConditionOperator, ConditionRule } from "@/lib/types/database"
 import { WizardLabel, WizardSelect } from "@/components/automation-builder/shared/wizard-input"
 import { cn } from "@/lib/utils"
@@ -21,6 +18,7 @@ type ConditionRowProps = {
 }
 
 export function ConditionRow({ rule, index, onChange, onRemove, invalid }: ConditionRowProps) {
+  const { conditionFields, getFieldDefinition } = useAutomationCatalog()
   const fieldDef = getFieldDefinition(rule.field)
   const operators = fieldDef?.operators ?? ["eq", "neq"]
 
@@ -52,7 +50,7 @@ export function ConditionRow({ rule, index, onChange, onRemove, invalid }: Condi
       </div>
 
       <p className="mb-3 rounded-lg bg-violet-500/10 px-3 py-2 text-sm text-violet-200/90">
-        {humanizeRule(rule)}
+        {humanizeRule(rule, conditionFields)}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -61,7 +59,7 @@ export function ConditionRow({ rule, index, onChange, onRemove, invalid }: Condi
           <WizardSelect
             value={rule.field}
             onChange={(e) => {
-              const next = CONDITION_FIELDS.find((f) => f.field === e.target.value)
+              const next = conditionFields.find((f) => f.field === e.target.value)
               onChange({
                 field: e.target.value,
                 op: next?.operators[0] ?? "eq",
@@ -69,7 +67,7 @@ export function ConditionRow({ rule, index, onChange, onRemove, invalid }: Condi
               })
             }}
           >
-            {CONDITION_FIELDS.map((f) => (
+            {conditionFields.map((f) => (
               <option key={f.field} value={f.field}>
                 {f.label}
               </option>

@@ -2,23 +2,21 @@
 
 import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { Radio, Search, Zap } from "lucide-react"
-import {
-  TRIGGER_CATALOG,
-  TRIGGER_CATEGORIES,
-  type TriggerCategory,
-} from "@/lib/automation/trigger-catalog"
+import { Loader2, Radio, Search, Zap } from "lucide-react"
+import type { TriggerCategory } from "@/lib/automation/trigger-catalog"
+import { useAutomationCatalog } from "@/lib/hooks/use-automation-catalog"
 import { useAutomationWizardStore } from "@/lib/stores/automation-wizard-store"
 import { cn } from "@/lib/utils"
 
 export function TriggerStep() {
   const { draft, patchDraft } = useAutomationWizardStore()
+  const { loading, categories, eventTypes } = useAutomationCatalog()
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState<TriggerCategory | "all">("all")
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return TRIGGER_CATALOG.filter((t) => {
+    return eventTypes.filter((t) => {
       if (category !== "all" && t.category !== category) return false
       if (!q) return true
       return (
@@ -27,7 +25,7 @@ export function TriggerStep() {
         t.description.toLowerCase().includes(q)
       )
     })
-  }, [search, category])
+  }, [search, category, eventTypes])
 
   const grouped = useMemo(() => {
     const map = new Map<TriggerCategory, typeof filtered>()
@@ -38,6 +36,26 @@ export function TriggerStep() {
     }
     return map
   }, [filtered])
+
+  const categoryKeys = Object.keys(categories) as TriggerCategory[]
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[240px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
+      </div>
+    )
+  }
+
+  if (eventTypes.length === 0) {
+    return (
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100">
+        No event types configured. Run the{" "}
+        <code className="rounded bg-black/20 px-1">event_catalog</code> migration and seed
+        script in Supabase.
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -73,7 +91,7 @@ export function TriggerStep() {
           >
             All
           </button>
-          {(Object.keys(TRIGGER_CATEGORIES) as TriggerCategory[]).map((cat) => (
+          {categoryKeys.map((cat) => (
             <button
               key={cat}
               type="button"
@@ -85,7 +103,7 @@ export function TriggerStep() {
                   : "text-flow-muted hover:text-flow"
               )}
             >
-              {TRIGGER_CATEGORIES[cat]}
+              {categories[cat]}
             </button>
           ))}
         </div>
@@ -96,7 +114,7 @@ export function TriggerStep() {
           ? Array.from(grouped.entries()).map(([cat, triggers]) => (
               <section key={cat}>
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-flow-faint">
-                  {TRIGGER_CATEGORIES[cat]}
+                  {categories[cat]}
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {triggers.map((t) => (
