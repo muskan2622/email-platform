@@ -93,7 +93,9 @@ const mockPayload = {
   plan_name: "Scale",
   cta_url: "https://app.example.com",
   trial_ending: true,
+  billing_date: new Date().toISOString(),
   invoice: { items: ["Seats", "Usage", "Priority support"] },
+  user: { metadata: { role: "admin" } },
 }
 
 function editorBody(template: Template) {

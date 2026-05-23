@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server"
 import { jsonError, jsonOk } from "@/lib/api/response"
-import { buildRenderContext, renderEmail } from "@/lib/email/render"
+import {
+  buildRenderContext,
+  renderEmail,
+  TemplateRenderError,
+} from "@/lib/email/render"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Template } from "@/lib/types/database"
 
@@ -30,12 +34,21 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 
   const context = buildRenderContext(payload)
-  const rendered = renderEmail(
-    (template as Template).subject,
-    (template as Template).body_html,
-    (template as Template).body_text,
-    context
-  )
-
-  return jsonOk({ context, ...rendered })
+  try {
+    const rendered = renderEmail(
+      (template as Template).subject,
+      (template as Template).body_html,
+      (template as Template).body_text,
+      context
+    )
+    return jsonOk({ context, ...rendered })
+  } catch (err) {
+    const message =
+      err instanceof TemplateRenderError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "Template render failed"
+    return jsonError(message, 400)
+  }
 }

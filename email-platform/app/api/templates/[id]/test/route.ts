@@ -1,7 +1,11 @@
 import { NextRequest } from "next/server"
 import { jsonError, jsonOk } from "@/lib/api/response"
 import { logTemplateTestSend } from "@/lib/email/log-template-test"
-import { buildRenderContext, renderEmail } from "@/lib/email/render"
+import {
+  buildRenderContext,
+  renderEmail,
+  TemplateRenderError,
+} from "@/lib/email/render"
 import { sendEmail, type EmailProviderId } from "@/lib/email/send"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Template } from "@/lib/types/database"
@@ -41,12 +45,23 @@ export async function POST(request: NextRequest, { params }: Params) {
       : {}
 
   const context = buildRenderContext(payload)
-  const rendered = renderEmail(
-    (template as Template).subject,
-    (template as Template).body_html,
-    (template as Template).body_text,
-    context
-  )
+  let rendered: ReturnType<typeof renderEmail>
+  try {
+    rendered = renderEmail(
+      (template as Template).subject,
+      (template as Template).body_html,
+      (template as Template).body_text,
+      context
+    )
+  } catch (err) {
+    const message =
+      err instanceof TemplateRenderError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "Template render failed"
+    return jsonError(message, 400)
+  }
 
   const renderedSubject = `[TEST] ${rendered.subject}`
 
