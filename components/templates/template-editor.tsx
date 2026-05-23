@@ -169,7 +169,7 @@ export function TemplateEditor() {
   const [query, setQuery] = useState("")
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [editorMode, setEditorMode] = useState<EditorMode>("visual")
-  const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop")
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("dark")
   const [statusFilter, setStatusFilter] = useState<"all" | Template["status"]>("all")
   const [kindFilter, setKindFilter] = useState<"all" | TemplateKind>("all")
   const [sortBy, setSortBy] = useState("updated_at")
@@ -177,6 +177,7 @@ export function TemplateEditor() {
   const [testEmail, setTestEmail] = useState("growth@example.com")
   const [provider, setProvider] = useState<Provider>("resend")
   const [sending, setSending] = useState(false)
+  const [customMockValues, setCustomMockValues] = useState<Record<string, string>>({})
 
   const selected = templates.find((template) => template.id === selectedId) ?? templates[0]
   const activeSubject = draftTemplateId === selected?.id ? subject : selected?.subject ?? ""
@@ -266,10 +267,11 @@ export function TemplateEditor() {
     setSending(true)
     setToast(null)
     try {
+      const mergedPayload = { ...mockPayload, ...customMockValues }
       await apiPost(`/api/templates/${selected.id}/test`, {
         to: testEmail,
         provider,
-        payload: mockPayload,
+        payload: mergedPayload,
       })
       await refresh()
       setToast(`Test sent via ${provider.toUpperCase()} — check Events and Email Logs`)
@@ -526,7 +528,22 @@ export function TemplateEditor() {
                   <div className="rounded-lg border border-flow-glass-faint bg-flow-glass-subtle p-3">
                     <div className="mb-2 flex items-center gap-2 text-xs font-medium text-flow"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />Validation</div>
                     {missingVariables.length ? (
-                      <p className="text-xs text-amber-200">Missing mock values: {missingVariables.join(", ")}</p>
+                      <div className="space-y-3">
+                        <p className="text-xs text-amber-200">Missing mock values: {missingVariables.join(", ")}</p>
+                        <div className="space-y-2">
+                          {missingVariables.map((variable) => (
+                            <input
+                              key={variable}
+                              type="text"
+                              placeholder={variable}
+                              value={customMockValues[variable] ?? ""}
+                              onChange={(e) => setCustomMockValues({ ...customMockValues, [variable]: e.target.value })}
+                              className="w-full rounded-lg border border-flow-glass bg-flow-glass-inset px-2 py-1.5 text-xs text-flow outline-none ring-violet-500/30 focus:ring-2"
+                            />
+                          ))}
+                        </div>
+                        <Button size="sm" onClick={sendTest} disabled={sending} className="w-full">{sending ? <Loader2 className="animate-spin" /> : <Send className="h-3.5 w-3.5" />}Fill & Send Test</Button>
+                      </div>
                     ) : (
                       <p className="text-xs text-flow-muted">All detected placeholders resolve against the mock payload. Spam score warning: low risk.</p>
                     )}

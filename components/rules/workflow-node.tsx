@@ -119,7 +119,7 @@ export const WorkflowFlowNode = memo(function WorkflowFlowNode({
               {nodeData.status}
             </span>
           </div>
-          <p className="mt-1 line-clamp-2 text-xs text-flow-muted">{nodeData.subtitle}</p>
+          <p className="mt-1 text-xs text-flow-muted whitespace-pre-wrap break-words">{nodeData.subtitle}</p>
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs">

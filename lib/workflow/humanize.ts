@@ -9,7 +9,7 @@ export function conditionSummary(conditions: ConditionGroup): string {
         ? `(${conditionSummary(rule)})`
         : `${rule.field} ${rule.op} ${String(rule.value ?? "")}`
     )
-    .join(` ${conditions.operator.toUpperCase()} `)
+    .join(`\n${conditions.operator.toUpperCase()}\n`)
 }
 
 export function formatDelayLabel(minutes: number, sendImmediately: boolean): string {

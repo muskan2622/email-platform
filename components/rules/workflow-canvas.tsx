@@ -127,7 +127,7 @@ export function WorkflowCanvas({
             <h2 className="text-lg font-semibold text-flow">{source.name}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               className={canvasToolbarButtonClass}
@@ -135,7 +135,7 @@ export function WorkflowCanvas({
             >
               <Maximize2 />
               Fit
-            </Button>
+            </Button> */}
             <Button size="sm" onClick={() => void onRunTest()} disabled={runningTest}>
               {runningTest ? <Loader2 className="animate-spin" /> : <Play />}
               Run test

@@ -12,6 +12,13 @@ import type {
 } from "@/lib/workflow/types"
 
 const EDGE_STYLE = { stroke: "#22d3ee", strokeWidth: 2 }
+const EDGE_COLORS: Record<string, string> = {
+  "e-trigger-condition": "#22d3ee",
+  "e-condition-frequency": "#06b6d4",
+  "e-frequency-delay": "#0891b2",
+  "e-delay-send": "#06d6ff",
+  "e-send-goal": "#00d9ff",
+}
 
 function statusForAutomation(enabled: boolean, status: string): WorkflowNodeStatus {
   if (!enabled || status !== "active") return "guarded"
@@ -31,7 +38,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
     {
       id: "trigger",
       type: "workflow",
-      position: { x: 0, y: 100 },
+      position: { x: 0, y: 180 },
       data: {
         kind: "trigger",
         label: "Trigger",
@@ -49,7 +56,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
     {
       id: "condition",
       type: "workflow",
-      position: { x: 280, y: 100 },
+      position: { x: 280, y: 320 },
       data: {
         kind: "condition",
         label: "Conditions",
@@ -66,7 +73,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
     {
       id: "frequency",
       type: "workflow",
-      position: { x: 560, y: 100 },
+      position: { x: 560, y: 80 },
       data: {
         kind: "frequency",
         label: "Frequency Cap",
@@ -89,7 +96,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
     {
       id: "delay",
       type: "workflow",
-      position: { x: 840, y: 100 },
+      position: { x: 840, y: 220 },
       data: {
         kind: "delay",
         label: "Delay",
@@ -108,7 +115,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
     {
       id: "send",
       type: "workflow",
-      position: { x: 1120, y: 100 },
+      position: { x: 1120, y: 80 },
       data: {
         kind: "send",
         label: "Send Template",
@@ -129,7 +136,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
     {
       id: "goal",
       type: "workflow",
-      position: { x: 1400, y: 100 },
+      position: { x: 1400, y: 180 },
       data: {
         kind: "goal",
         label: "Goal",
@@ -152,7 +159,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
       target: "condition",
       label: "event received",
       animated: true,
-      style: EDGE_STYLE,
+      style: { stroke: EDGE_COLORS["e-trigger-condition"], strokeWidth: 2.5 },
     },
     {
       id: "e-condition-frequency",
@@ -160,7 +167,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
       target: "frequency",
       label: "qualified",
       animated: true,
-      style: EDGE_STYLE,
+      style: { stroke: EDGE_COLORS["e-condition-frequency"], strokeWidth: 2.5 },
     },
     {
       id: "e-frequency-delay",
@@ -168,7 +175,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
       target: "delay",
       label: "under cap",
       animated: true,
-      style: EDGE_STYLE,
+      style: { stroke: EDGE_COLORS["e-frequency-delay"], strokeWidth: 2.5 },
     },
     {
       id: "e-delay-send",
@@ -176,7 +183,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
       target: "send",
       label: "timer fired",
       animated: true,
-      style: EDGE_STYLE,
+      style: { stroke: EDGE_COLORS["e-delay-send"], strokeWidth: 2.5 },
     },
     {
       id: "e-send-goal",
@@ -184,7 +191,7 @@ export function buildWorkflowGraph(source: WorkflowAutomationSource): {
       target: "goal",
       label: "delivered",
       animated: true,
-      style: EDGE_STYLE,
+      style: { stroke: EDGE_COLORS["e-send-goal"], strokeWidth: 2.5 },
     },
   ]
 

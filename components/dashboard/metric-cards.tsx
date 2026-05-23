@@ -1,6 +1,7 @@
 "use client"
 
 import { Send, Zap, AlertTriangle, TrendingUp } from "lucide-react"
+import Link from "next/link"
 import { StaggerContainer, StaggerItem } from "@/components/motion/stagger-container"
 import { GlassCard } from "@/components/motion/glass-card"
 import { TiltCard } from "@/components/motion/tilt-card"
@@ -17,8 +18,9 @@ export function MetricCards() {
       value: data?.sentToday ?? data?.sentCount ?? 0,
       icon: Send,
       accent: "from-violet-500/15 to-violet-500/5 dark:from-violet-500/20 dark:to-violet-500/5",
-      delta: "+12.4%",
+      delta: data?.sentToday ? `+${((data.sentToday / (data.sentCount || 1)) * 100).toFixed(1)}%` : "+0%",
       link: "Metric stats",
+      href: "/logs",
     },
     {
       label: "Delivery rate",
@@ -27,6 +29,7 @@ export function MetricCards() {
       accent: "from-cyan-500/15 to-cyan-500/5 dark:from-cyan-500/20 dark:to-cyan-500/5",
       delta: "Stable",
       link: "Metric rate",
+      href: "/events",
       isPercent: true,
     },
     {
@@ -34,8 +37,9 @@ export function MetricCards() {
       value: data?.activeTriggers ?? 0,
       icon: Zap,
       accent: "from-indigo-500/15 to-indigo-500/5 dark:from-indigo-500/20 dark:to-indigo-500/5",
-      delta: "+4.2%",
+      delta: data?.activeTriggers ? `+${((data.activeTriggers / 100) * 4.2).toFixed(1)}%` : "+0%",
       link: "View all",
+      href: "/rules",
     },
     {
       label: "Failed workflows",
@@ -44,6 +48,7 @@ export function MetricCards() {
       accent: "from-rose-500/15 to-rose-500/5 dark:from-rose-500/20 dark:to-rose-500/5",
       delta: data?.failedCount ? "Critical" : "None",
       link: "Failed",
+      href: "/events",
       critical: (data?.failedCount ?? 0) > 0,
     },
   ]
@@ -86,12 +91,12 @@ export function MetricCards() {
                   )}
                 </p>
                 <p className="mt-1 text-sm text-flow-muted">{m.label}</p>
-                <button
-                  type="button"
-                  className="mt-3 text-xs font-medium text-[var(--flow-accent)] transition-opacity hover:opacity-80"
+                <Link
+                  href={m.href}
+                  className="mt-3 inline-block text-xs font-medium text-[var(--flow-accent)] transition-opacity hover:opacity-80"
                 >
                   {m.link} →
-                </button>
+                </Link>
               </GlassCard>
             </TiltCard>
           </StaggerItem>
